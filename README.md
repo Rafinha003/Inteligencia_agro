@@ -1,16 +1,15 @@
-# inteligencia_agro
+🌾 Inteligência Agro - Conectando Pequenos e Médios Agricultores 🚜
 
-A new Flutter project.
+Bem-vindo a Inteligência Agro! Este aplicativo foi desenvolvido para ajudar pequenos e médios agricultores a divulgar e negociar seus produtos, insumos, equipamentos e máquinas. Aqui, você pode vender, alugar e trocar itens de forma simples e eficiente! 🌍💰
 
-## Getting Started
+🚀 Funcionalidades
 
-This project is a starting point for a Flutter application.
+✅ Cadastro e login de usuários 👥
+✅ Divulgação de produtos e serviços 📢
+✅ Busca inteligente por produtos 🔍
+✅ Sistema de compra, venda, aluguel e troca 🔄
 
-A few resources to get you started if this is your first Flutter project:
+🛠️ Tecnologias Utilizadas
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+🔹 Flutter - Desenvolvimento mobile 📱
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
