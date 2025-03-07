@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "160343627791",
+    "project_id": "inteligencia-agro",
+    "storage_bucket": "inteligencia-agro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:160343627791:android:dbf45f563b2dbd4b4c2b7a",
+        "android_client_info": {
+          "package_name": "com.example.inteligencia_agro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDefWmSptDDOstLGhFjBEKy30hYT_2LycY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

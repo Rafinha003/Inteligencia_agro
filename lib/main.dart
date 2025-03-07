@@ -1,8 +1,16 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:inteligencia_agro/tela-inicial/tela-inicial.dart';
+import 'package:inteligencia_agro/View/tela-login/tela-login.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(DevicePreview(
     enabled: true, 
     builder: (context) => const MyApp(),
@@ -16,11 +24,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Hello word, bora Inteligência Agro',
+      title: 'Inteligência Agro',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 223, 222, 224)),
+        primarySwatch: Colors.green,
       ),
-      home: const TelaInicial() 
+      home: LoginPage() 
     );
   }
 }
