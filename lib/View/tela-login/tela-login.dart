@@ -1,10 +1,24 @@
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
+import 'package:inteligencia_agro/Controller/loginController.dart';
+import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
+import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class LoginPage extends StatelessWidget {
+  final _formKey = GlobalKey<FormState>();
+
+  TextEditingController _valorEmail = TextEditingController();
+  TextEditingController _valorSenha = TextEditingController();
+
+  LoginController _loginController = LoginController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
+       child: Form(
+        key: _formKey,
         child: SingleChildScrollView( 
           padding: EdgeInsets.all(16.0),
           child: Column(
@@ -25,17 +39,30 @@ class LoginPage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 32),
-              TextField(
+              TextFormField(
+                controller: _valorEmail,
                 decoration: InputDecoration(
-                  labelText: 'Usuário',
+                  labelText: 'email',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.0),
                   ),
                   prefixIcon: Icon(Icons.person),
                 ),
+                validator: (String? value){
+
+                  if(value == null || value.isEmpty){
+                    return "Digite o e-mail";
+                  }
+                  if(!value.contains("@")){
+                     return "O e-mail é inválido";
+                  }
+
+                  return null;
+                },
               ),
               SizedBox(height: 16),
-              TextField(
+              TextFormField(
+                controller: _valorSenha,
                 decoration: InputDecoration(
                   labelText: 'Senha',
                   border: OutlineInputBorder(
@@ -43,7 +70,13 @@ class LoginPage extends StatelessWidget {
                   ),
                   prefixIcon: Icon(Icons.lock),
                 ),
-                obscureText: true, // Oculta a senha
+                obscureText: true,
+                validator: (value){
+                  if(value == null || value.isEmpty){
+                    return "Digite uma senha";
+                  }
+                  return null;
+                }, 
               ),
               SizedBox(height: 8),
               Align(
@@ -58,7 +91,7 @@ class LoginPage extends StatelessWidget {
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  // Lógica de login
+                  btnLogin(context);
                 },
                 child: Text('Login',  style: TextStyle(color: Colors.white),),
                 style: ElevatedButton.styleFrom(
@@ -69,7 +102,7 @@ class LoginPage extends StatelessWidget {
               SizedBox(height: 8),
               TextButton(
                 onPressed: () {
-                  // Lógica para criar conta
+                  btnCriarConta(context);
                 },
                 child: Text('Criar conta', style: TextStyle(color: Colors.white),),
                 style: ElevatedButton.styleFrom(
@@ -81,6 +114,34 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
+      )
     );
+  }
+
+  btnLogin(BuildContext context){
+     String email = _valorEmail.text;
+     String senha = _valorSenha.text;
+
+     if(_formKey.currentState!.validate()){
+
+        _loginController.LogarUsuario(email: email, senha: senha).then((String? erro){
+          if(erro != null){
+            mostrarNotificacaoTela(context: context, texto: erro);
+          }else{
+           mostrarNotificacaoTela(context: context, texto: "Usuário logado com sucesso", isErro: false);
+          }
+          
+        });
+     }
+     else {
+      mostrarNotificacaoTela(context: context, texto: "Há um ou mais campos inválidos.");
+     }
+  }
+
+  btnCriarConta(BuildContext context){
+      Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => CadastroPage()), 
+  );
   }
 }
