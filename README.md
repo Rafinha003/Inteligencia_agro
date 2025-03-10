@@ -12,4 +12,5 @@ Bem-vindo a Inteligência Agro! Este aplicativo foi desenvolvido para ajudar peq
 🛠️ Tecnologias Utilizadas
 
 🔹 Flutter - Desenvolvimento mobile 📱
+🔹 Firebase - Armazenamento de dados 🎲
 
