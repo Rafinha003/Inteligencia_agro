@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class CadastroPage extends StatelessWidget {
@@ -9,6 +10,8 @@ class CadastroPage extends StatelessWidget {
   final TextEditingController _cpfController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
   final TextEditingController _confirmarSenhaController = TextEditingController();
+
+   AutenticacaoController _autenticacaoController = AutenticacaoController();
 
   @override
   Widget build(BuildContext context) {
@@ -160,13 +163,20 @@ class CadastroPage extends StatelessWidget {
   }
 
    _cadastrarUsuario(BuildContext context) {
+      String email = _emailController.text;
+     String senha = _senhaController.text;
+    
     if (_formKey.currentState!.validate()) {
-      mostrarNotificacaoTela(
-        context: context,
-        texto: "Cadastro realizado com sucesso!",
-        isErro: false,
-      );
-      Navigator.pop(context); 
+
+     _autenticacaoController.cadastrarUsuario(email: email, senha: senha).then((String? erro){
+          if(erro != null){
+            mostrarNotificacaoTela(context: context, texto: erro);
+          }else{
+           mostrarNotificacaoTela(context: context, texto: "Cadastro realizado com sucesso!", isErro: false);
+            Navigator.pop(context); 
+          }
+    });
+     
     } else {
       mostrarNotificacaoTela(
         context: context,
@@ -176,10 +186,10 @@ class CadastroPage extends StatelessWidget {
   }
 
   bool isCpfInvalido(String cpf) {
-  cpf = cpf.replaceAll(RegExp(r'[^0-9]'), ''); // Remove pontos e traços
+  cpf = cpf.replaceAll(RegExp(r'[^0-9]'), ''); 
 
   if (cpf.length != 11 || RegExp(r'^(.)\1+$').hasMatch(cpf)) {
-    return true; // CPF inválido (tamanho errado ou todos os dígitos iguais)
+    return true; 
   }
 
   List<int> numeros = cpf.split('').map(int.parse).toList();
@@ -194,11 +204,12 @@ class CadastroPage extends StatelessWidget {
     if (resto == 10) resto = 0;
 
     if (numeros[j] != resto) {
-      return true; // CPF inválido
+      return true; 
     }
   }
 
-  return false; // CPF válido
+  return false; 
 }
+
 
 }

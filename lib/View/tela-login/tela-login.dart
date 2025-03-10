@@ -1,7 +1,7 @@
 import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
-import 'package:inteligencia_agro/Controller/loginController.dart';
+import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
 import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
@@ -11,7 +11,7 @@ class LoginPage extends StatelessWidget {
   TextEditingController _valorEmail = TextEditingController();
   TextEditingController _valorSenha = TextEditingController();
 
-  LoginController _loginController = LoginController();
+  AutenticacaoController _autenticacaoController = AutenticacaoController();
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +124,7 @@ class LoginPage extends StatelessWidget {
 
      if(_formKey.currentState!.validate()){
 
-        _loginController.LogarUsuario(email: email, senha: senha).then((String? erro){
+        _autenticacaoController.LogarUsuario(email: email, senha: senha).then((String? erro){
           if(erro != null){
             mostrarNotificacaoTela(context: context, texto: erro);
           }else{
