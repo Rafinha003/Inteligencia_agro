@@ -3,6 +3,8 @@ import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
 import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
+import 'package:inteligencia_agro/View/tela-inicial/tela-inicial.dart';
+import 'package:inteligencia_agro/View/tela-recuperar-senha/tela-recuperar-senha.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class LoginPage extends StatelessWidget {
@@ -83,7 +85,7 @@ class LoginPage extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // Lógica para recuperar senha
+                    btnEsqueceuSenha(context);
                   },
                   child: Text('Esqueceu a senha?', style: TextStyle(color: Color(0xFF00897B)),),
                 ),
@@ -129,6 +131,10 @@ class LoginPage extends StatelessWidget {
             mostrarNotificacaoTela(context: context, texto: erro);
           }else{
            mostrarNotificacaoTela(context: context, texto: "Usuário logado com sucesso", isErro: false);
+              Navigator.push(
+                context,
+              MaterialPageRoute(builder: (context) => TelaInicial())
+              );
           }
           
         });
@@ -142,6 +148,13 @@ class LoginPage extends StatelessWidget {
       Navigator.push(
     context,
     MaterialPageRoute(builder: (context) => CadastroPage()), 
+  );
+  }
+
+  btnEsqueceuSenha(BuildContext context){
+        Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => TelaRecuperarSenha()), 
   );
   }
 }

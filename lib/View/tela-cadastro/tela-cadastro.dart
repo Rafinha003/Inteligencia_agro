@@ -17,7 +17,7 @@ class CadastroPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cadastro', style: TextStyle(color: Colors.white, fontSize: 22),),
+        title: Text('Cadastro', style: TextStyle(color: Colors.white, fontSize:22),),
         centerTitle: true,
         backgroundColor: const Color(0xFF045006),
         leading: IconButton(
@@ -27,6 +27,7 @@ class CadastroPage extends StatelessWidget {
             Navigator.pop(context); 
           },
         ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(30))),
       ),
       body: Center(
         child: SingleChildScrollView(

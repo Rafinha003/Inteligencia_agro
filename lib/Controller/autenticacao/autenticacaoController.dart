@@ -11,7 +11,16 @@ class AutenticacaoController{
     if (e.code == "email-already-in-use") {
       return "O email já foi cadastrado";
     }
-    return e.message; // Retorna a mensagem de erro do Firebase
+
+    if(e.code == "weak-password"){
+      return "A senha precisa ter mais de 6 caracter";
+    }
+
+    if(e.code == "invalid-email"){
+      return "O e-mail está inválido";
+    }
+   
+    return e.message; 
   } 
 }
 
@@ -29,4 +38,13 @@ class AutenticacaoController{
       return e.message;
   }
 }
+
+ Future<String?> RecuperarSenha({required String email}) async {
+     try{
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+          return null;
+     }on FirebaseAuthException catch(e){
+       return e.message;
+     }
+ }
 }
