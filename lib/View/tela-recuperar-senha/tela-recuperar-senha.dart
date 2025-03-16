@@ -118,7 +118,7 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
+          MaterialPageRoute(builder: (context) => TelaLogin()),
         );
       }
     });

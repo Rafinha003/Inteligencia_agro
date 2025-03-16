@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
-class CadastroPage extends StatelessWidget {
-  final _formKey = GlobalKey<FormState>();
+class TelaCadastro extends StatefulWidget {
+  const TelaCadastro({super.key});
+
+  @override
+  State<TelaCadastro> createState() => _TelaCadastroState();
+}
+
+class _TelaCadastroState extends State<TelaCadastro> {
+    final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _cpfController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
-  final TextEditingController _confirmarSenhaController =
-      TextEditingController();
+  final TextEditingController _confirmarSenhaController = TextEditingController();
 
   AutenticacaoController _autenticacaoController = AutenticacaoController();
 
@@ -223,4 +229,5 @@ class CadastroPage extends StatelessWidget {
 
     return false;
   }
+
 }

@@ -12,7 +12,7 @@ class AutenticacaoController {
         email: email,
         password: senha,
       );
-      return null; // Retorno explícito quando o cadastro é bem-sucedido
+      return null;
     } on FirebaseAuthException catch (e) {
       if (e.code == "email-already-in-use") {
         return "O email já foi cadastrado";

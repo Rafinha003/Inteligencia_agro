@@ -1,5 +1,3 @@
-import 'dart:js_interop';
-
 import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
 import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
@@ -7,7 +5,14 @@ import 'package:inteligencia_agro/View/tela-inicial/tela-inicial.dart';
 import 'package:inteligencia_agro/View/tela-recuperar-senha/tela-recuperar-senha.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
-class LoginPage extends StatelessWidget {
+class TelaLogin extends StatefulWidget {
+  const TelaLogin({super.key});
+
+  @override
+  State<TelaLogin> createState() => _TelaLoginState();
+}
+
+class _TelaLoginState extends State<TelaLogin> {
   final _formKey = GlobalKey<FormState>();
 
   TextEditingController _valorEmail = TextEditingController();
@@ -162,7 +167,7 @@ class LoginPage extends StatelessWidget {
   btnCriarConta(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CadastroPage()),
+      MaterialPageRoute(builder: (context) => TelaCadastro()),
     );
   }
 

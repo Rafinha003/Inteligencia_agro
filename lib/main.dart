@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Inteligência Agro',
       theme: ThemeData(primarySwatch: Colors.green),
-      home: LoginPage(),
+      home: TelaLogin(),
     );
   }
 }
