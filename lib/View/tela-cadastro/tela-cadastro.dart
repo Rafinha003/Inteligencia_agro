@@ -9,25 +9,31 @@ class CadastroPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _cpfController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
-  final TextEditingController _confirmarSenhaController = TextEditingController();
+  final TextEditingController _confirmarSenhaController =
+      TextEditingController();
 
-   AutenticacaoController _autenticacaoController = AutenticacaoController();
+  AutenticacaoController _autenticacaoController = AutenticacaoController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cadastro', style: TextStyle(color: Colors.white, fontSize:22),),
+        title: Text(
+          'Cadastro',
+          style: TextStyle(color: Colors.white, fontSize: 22),
+        ),
         centerTitle: true,
         backgroundColor: const Color(0xFF045006),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           color: Colors.white,
           onPressed: () {
-            Navigator.pop(context); 
+            Navigator.pop(context);
           },
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(30))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -51,12 +57,12 @@ class CadastroPage extends StatelessWidget {
                   controller: _nomeController,
                   label: "Nome",
                   icon: Icons.person,
-                  validator: (value){
-                    if(value!.isEmpty){
+                  validator: (value) {
+                    if (value!.isEmpty) {
                       return "Digite seu nome";
                     }
                     return null;
-                  }
+                  },
                 ),
                 SizedBox(height: 16),
                 _buildTextField(
@@ -64,13 +70,13 @@ class CadastroPage extends StatelessWidget {
                   label: "E-mail",
                   icon: Icons.email,
                   validator: (value) {
-                    if (value!.isEmpty){
-                        return "Digite o e-mail";
-                    } 
-                    if (!value.contains("@")) {
-                       return "O e-mail é inválido";
+                    if (value!.isEmpty) {
+                      return "Digite o e-mail";
                     }
-                   
+                    if (!value.contains("@")) {
+                      return "O e-mail é inválido";
+                    }
+
                     return null;
                   },
                 ),
@@ -81,18 +87,17 @@ class CadastroPage extends StatelessWidget {
                   icon: Icons.badge,
                   keyboardType: TextInputType.number,
                   validator: (value) {
-                    if(value!.isEmpty){
-                      return "Digite um CPF";    
+                    if (value!.isEmpty) {
+                      return "Digite um CPF";
                     }
-                    if(value!.length != 11){
-                      return  "CPF inválido";
+                    if (value!.length != 11) {
+                      return "CPF inválido";
                     }
-                    if(isCpfInvalido(value)){
+                    if (isCpfInvalido(value)) {
                       return "CPF inválido";
                     }
                     return null;
-                  }
-        
+                  },
                 ),
                 SizedBox(height: 16),
                 _buildTextField(
@@ -100,8 +105,8 @@ class CadastroPage extends StatelessWidget {
                   label: "Senha",
                   icon: Icons.lock,
                   isPassword: true,
-                  validator: (value){
-                    if(value!.isEmpty){
+                  validator: (value) {
+                    if (value!.isEmpty) {
                       return "Digite uma senha";
                     }
                     return null;
@@ -114,12 +119,12 @@ class CadastroPage extends StatelessWidget {
                   icon: Icons.lock_outline,
                   isPassword: true,
                   validator: (value) {
-                    if (value!.isEmpty){
+                    if (value!.isEmpty) {
                       return "Confirme a senha";
-                    } 
-                    if (value != _senhaController.text){
+                    }
+                    if (value != _senhaController.text) {
                       return "As senhas não coincidem";
-                    } 
+                    }
                     return null;
                   },
                 ),
@@ -128,7 +133,10 @@ class CadastroPage extends StatelessWidget {
                   onPressed: () {
                     _cadastrarUsuario(context);
                   },
-                  child: Text("Cadastrar", style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    "Cadastrar",
+                    style: TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                     backgroundColor: Color(0xFF3FAF47),
@@ -163,21 +171,25 @@ class CadastroPage extends StatelessWidget {
     );
   }
 
-   _cadastrarUsuario(BuildContext context) {
-      String email = _emailController.text;
-     String senha = _senhaController.text;
-    
-    if (_formKey.currentState!.validate()) {
+  _cadastrarUsuario(BuildContext context) {
+    String email = _emailController.text;
+    String senha = _senhaController.text;
 
-     _autenticacaoController.cadastrarUsuario(email: email, senha: senha).then((String? erro){
-          if(erro != null){
+    if (_formKey.currentState!.validate()) {
+      _autenticacaoController.cadastrarUsuario(email: email, senha: senha).then(
+        (String? erro) {
+          if (erro != null) {
             mostrarNotificacaoTela(context: context, texto: erro);
-          }else{
-           mostrarNotificacaoTela(context: context, texto: "Cadastro realizado com sucesso!", isErro: false);
-            Navigator.pop(context); 
+          } else {
+            mostrarNotificacaoTela(
+              context: context,
+              texto: "Cadastro realizado com sucesso!",
+              isErro: false,
+            );
+            Navigator.pop(context);
           }
-    });
-     
+        },
+      );
     } else {
       mostrarNotificacaoTela(
         context: context,
@@ -187,30 +199,28 @@ class CadastroPage extends StatelessWidget {
   }
 
   bool isCpfInvalido(String cpf) {
-  cpf = cpf.replaceAll(RegExp(r'[^0-9]'), ''); 
+    cpf = cpf.replaceAll(RegExp(r'[^0-9]'), '');
 
-  if (cpf.length != 11 || RegExp(r'^(.)\1+$').hasMatch(cpf)) {
-    return true; 
-  }
-
-  List<int> numeros = cpf.split('').map(int.parse).toList();
-
-  for (int j = 9; j < 11; j++) {
-    int soma = 0;
-    for (int i = 0; i < j; i++) {
-      soma += numeros[i] * ((j + 1) - i);
+    if (cpf.length != 11 || RegExp(r'^(.)\1+$').hasMatch(cpf)) {
+      return true;
     }
 
-    int resto = (soma * 10) % 11;
-    if (resto == 10) resto = 0;
+    List<int> numeros = cpf.split('').map(int.parse).toList();
 
-    if (numeros[j] != resto) {
-      return true; 
+    for (int j = 9; j < 11; j++) {
+      int soma = 0;
+      for (int i = 0; i < j; i++) {
+        soma += numeros[i] * ((j + 1) - i);
+      }
+
+      int resto = (soma * 10) % 11;
+      if (resto == 10) resto = 0;
+
+      if (numeros[j] != resto) {
+        return true;
+      }
     }
+
+    return false;
   }
-
-  return false; 
-}
-
-
 }

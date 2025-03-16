@@ -19,142 +19,157 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-       child: Form(
-        key: _formKey,
-        child: SingleChildScrollView( 
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey[300],
-                child: Icon(Icons.grass, size: 50, color: Colors.green),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Inteligência Agro',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, fontFamily: 'Serif'),
-              ),
-              Text(
-                'Facilitando negócios e parcerias no mundo rural',
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 32),
-              TextFormField(
-                controller: _valorEmail,
-                decoration: InputDecoration(
-                  labelText: 'email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  prefixIcon: Icon(Icons.person),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey[300],
+                  child: Icon(Icons.grass, size: 50, color: Colors.green),
                 ),
-                validator: (String? value){
-
-                  if(value == null || value.isEmpty){
-                    return "Digite o e-mail";
-                  }
-                  if(!value.contains("@")){
-                     return "O e-mail é inválido";
-                  }
-
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _valorSenha,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
+                SizedBox(height: 16),
+                Text(
+                  'Inteligência Agro',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Serif',
                   ),
-                  prefixIcon: Icon(Icons.lock),
                 ),
-                obscureText: true,
-                validator: (value){
-                  if(value == null || value.isEmpty){
-                    return "Digite uma senha";
-                  }
-                  return null;
-                }, 
-              ),
-              SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    btnEsqueceuSenha(context);
+                Text(
+                  'Facilitando negócios e parcerias no mundo rural',
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 32),
+                TextFormField(
+                  controller: _valorEmail,
+                  decoration: InputDecoration(
+                    labelText: 'email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return "Digite o e-mail";
+                    }
+                    if (!value.contains("@")) {
+                      return "O e-mail é inválido";
+                    }
+
+                    return null;
                   },
-                  child: Text('Esqueceu a senha?', style: TextStyle(color: Color(0xFF00897B)),),
                 ),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  btnLogin(context);
-                },
-                child: Text('Login',  style: TextStyle(color: Colors.white),),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
-                  backgroundColor: const Color(0xFF045006)
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _valorSenha,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Digite uma senha";
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 8),
-              TextButton(
-                onPressed: () {
-                  btnCriarConta(context);
-                },
-                child: Text('Criar conta', style: TextStyle(color: Colors.white),),
-                style: ElevatedButton.styleFrom(
-                   minimumSize: Size(double.infinity, 50),
-                     backgroundColor: Color(0xFF3FAF47),
+                SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      btnEsqueceuSenha(context);
+                    },
+                    child: Text(
+                      'Esqueceu a senha?',
+                      style: TextStyle(color: Color(0xFF00897B)),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    btnLogin(context);
+                  },
+                  child: Text('Login', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: const Color(0xFF045006),
+                  ),
+                ),
+                SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    btnCriarConta(context);
+                  },
+                  child: Text(
+                    'Criar conta',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Color(0xFF3FAF47),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      )
     );
   }
 
-  btnLogin(BuildContext context){
-     String email = _valorEmail.text;
-     String senha = _valorSenha.text;
+  btnLogin(BuildContext context) {
+    String email = _valorEmail.text;
+    String senha = _valorSenha.text;
 
-     if(_formKey.currentState!.validate()){
-
-        _autenticacaoController.LogarUsuario(email: email, senha: senha).then((String? erro){
-          if(erro != null){
-            mostrarNotificacaoTela(context: context, texto: erro);
-          }else{
-           mostrarNotificacaoTela(context: context, texto: "Usuário logado com sucesso", isErro: false);
-              Navigator.push(
-                context,
-              MaterialPageRoute(builder: (context) => TelaInicial())
-              );
-          }
-          
-        });
-     }
-     else {
-      mostrarNotificacaoTela(context: context, texto: "Há um ou mais campos inválidos.");
-     }
+    if (_formKey.currentState!.validate()) {
+      _autenticacaoController.LogarUsuario(email: email, senha: senha).then((
+        String? erro,
+      ) {
+        if (erro != null) {
+          mostrarNotificacaoTela(context: context, texto: erro);
+        } else {
+          mostrarNotificacaoTela(
+            context: context,
+            texto: "Usuário logado com sucesso",
+            isErro: false,
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TelaInicial()),
+          );
+        }
+      });
+    } else {
+      mostrarNotificacaoTela(
+        context: context,
+        texto: "Há um ou mais campos inválidos.",
+      );
+    }
   }
 
-  btnCriarConta(BuildContext context){
-      Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => CadastroPage()), 
-  );
+  btnCriarConta(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CadastroPage()),
+    );
   }
 
-  btnEsqueceuSenha(BuildContext context){
-        Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => TelaRecuperarSenha()), 
-  );
+  btnEsqueceuSenha(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TelaRecuperarSenha()),
+    );
   }
 }

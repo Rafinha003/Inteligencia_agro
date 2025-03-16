@@ -13,9 +13,9 @@ class TelaRecuperarSenha extends StatefulWidget {
 class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
   final _formKey = GlobalKey<FormState>();
 
-   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-   AutenticacaoController _autenticacaoController = AutenticacaoController();
+  AutenticacaoController _autenticacaoController = AutenticacaoController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,7 +88,7 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
                       ),
                     ),
                     onPressed: () {
-                     btnEnviar();
+                      btnEnviar();
                     },
                     child: const Text(
                       "Enviar",
@@ -104,19 +104,23 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
     );
   }
 
-  btnEnviar(){
-     String email = _emailController.text;
+  btnEnviar() {
+    String email = _emailController.text;
 
-     _autenticacaoController.RecuperarSenha(email: email).then((String? erro){
-          if(erro != null){
-            mostrarNotificacaoTela(context: context, texto: erro);
-          }else{
-           mostrarNotificacaoTela(context: context, texto: "Email de recuperação enviado com sucesso!!", isErro: false);
-              Navigator.push(
-                context,
-              MaterialPageRoute(builder: (context) => LoginPage())
-              );
-          }
-     });
+    _autenticacaoController.RecuperarSenha(email: email).then((String? erro) {
+      if (erro != null) {
+        mostrarNotificacaoTela(context: context, texto: erro);
+      } else {
+        mostrarNotificacaoTela(
+          context: context,
+          texto: "Email de recuperação enviado com sucesso!!",
+          isErro: false,
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }
+    });
   }
-  }
+}

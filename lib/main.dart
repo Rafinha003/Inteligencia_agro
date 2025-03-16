@@ -7,14 +7,9 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(DevicePreview(
-    enabled: true, 
-    builder: (context) => const MyApp(),
-  ));
+  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -25,12 +20,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Inteligência Agro',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: LoginPage() 
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: LoginPage(),
     );
   }
 }
-
-
