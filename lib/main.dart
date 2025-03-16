@@ -1,8 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
 import 'package:inteligencia_agro/View/tela-login/tela-login.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:inteligencia_agro/View/tela-recuperar-senha/tela-recuperar-senha.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -21,7 +22,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Inteligência Agro',
       theme: ThemeData(primarySwatch: Colors.green),
-      home: TelaLogin(),
+      initialRoute: '/tela-login',
+      routes: {
+        '/tela-login': (context) => TelaLogin(),
+        '/tela-cadastro': (context) => TelaCadastro(),
+        '/tela-recuperar-senha': (context) => TelaRecuperarSenha()
+      }
     );
   }
 }

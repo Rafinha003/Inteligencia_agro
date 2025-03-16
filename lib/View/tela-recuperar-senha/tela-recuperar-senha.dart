@@ -30,7 +30,7 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
           icon: const Icon(Icons.arrow_back),
           color: Colors.white,
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushNamed(context, '/tela-login');
           },
         ),
         shape: const RoundedRectangleBorder(

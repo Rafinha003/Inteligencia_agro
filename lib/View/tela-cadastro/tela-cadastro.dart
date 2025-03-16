@@ -34,7 +34,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
           icon: Icon(Icons.arrow_back),
           color: Colors.white,
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushNamed(context, '/tela-login');
           },
         ),
         shape: RoundedRectangleBorder(
