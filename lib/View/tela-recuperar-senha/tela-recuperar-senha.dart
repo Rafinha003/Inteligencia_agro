@@ -116,10 +116,7 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
           texto: "Email de recuperação enviado com sucesso!!",
           isErro: false,
         );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TelaLogin()),
-        );
+        Navigator.pushNamed(context,  '/tela-login');
       }
     });
   }
