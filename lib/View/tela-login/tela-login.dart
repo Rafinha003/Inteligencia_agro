@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
-import 'package:inteligencia_agro/View/tela-inicial/tela-inicial.dart';
+import 'package:inteligencia_agro/View/Tela-principal/tela-principal.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class TelaLogin extends StatefulWidget {
@@ -51,7 +51,7 @@ class _TelaLoginState extends State<TelaLogin> {
                 TextFormField(
                   controller: _valorEmail,
                   decoration: InputDecoration(
-                    labelText: 'email',
+                    labelText: 'Email',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
@@ -143,14 +143,10 @@ class _TelaLoginState extends State<TelaLogin> {
         if (erro != null) {
           mostrarNotificacaoTela(context: context, texto: erro);
         } else {
-          mostrarNotificacaoTela(
-            context: context,
-            texto: "Usuário logado com sucesso",
-            isErro: false,
-          );
+          
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => TelaInicial()),
+            MaterialPageRoute(builder: (context) => TelaPrincipal()),
           );
         }
       });

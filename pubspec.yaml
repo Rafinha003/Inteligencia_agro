@@ -29,6 +29,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   device_preview: ^1.0.0
+  image: ^4.1.15
   flutter:
     sdk: flutter
 
@@ -37,6 +38,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   firebase_core: ^3.12.1
   firebase_auth: ^5.5.1
+  cloud_firestore: ^5.6.12
+  http: ^1.5.0
+  image_picker: ^1.2.0
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 
 class AutenticacaoController {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<String?> cadastrarUsuario({
     required String email,
@@ -29,6 +32,44 @@ class AutenticacaoController {
       return e.message;
     }
   }
+
+  Future<String?> criarUsuario({
+      required String nome,
+      required String email,
+      required String telefone,
+      required String cpfCnpj,
+      required String estado,
+      required String cidade,
+      required String cep,
+    }) async {
+      try {
+        User? user = _firebaseAuth.currentUser;
+        if (user == null) {
+          return "Erro ao criar o usuário.";
+        }
+
+        await _firestore.collection('Usuario').doc(user.uid).set({
+          'uid': user.uid,
+          'nome': nome,
+          'email': email,
+          'telefone': telefone,
+          'cpfCnpj': cpfCnpj,
+          'endereco': [
+            {
+              'estado': estado,
+              'cidade': cidade,
+              'cep': cep,
+            }
+          ],
+          'dataCadastro': DateTime.now(),
+        });
+
+        return null;
+      } catch (e) {
+        return "Erro ao salvar dados do usuário: $e";
+      }
+    }
+
 
   Future<String?> LogarUsuario({
     required String email,
