@@ -196,10 +196,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
             Column(
               children: [
                 _botaoAcao("Upgrade de Plano", true, () {
-                  Navigator.pushNamed(context, '/tela-escolha-plano');
+                  Navigator.pushReplacementNamed(context, '/tela-escolher-plano');
                 }),
                 const SizedBox(height: 12),
-                _botaoAcao("Ver meus itens", false, () {}),
+                _botaoAcao("Ver meus itens", true, () {
+                  Navigator.pushReplacementNamed(context, '/tela-ver-meus-itens');
+                }),
                 const SizedBox(height: 12),
                 _botaoAcao("Ver propostas", false, () {}),
               ],

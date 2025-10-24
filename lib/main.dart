@@ -6,6 +6,7 @@ import 'package:inteligencia_agro/View/Tela-principal/tela-principal.dart';
 import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
 import 'package:inteligencia_agro/View/tela-login/tela-login.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-perfil.dart';
+import 'package:inteligencia_agro/View/tela-perfil/tela-ver-meus-itens/tela-ver-meus-itens.dart';
 import 'package:inteligencia_agro/View/tela-recuperar-senha/tela-recuperar-senha.dart';
 import 'firebase_options.dart';
 
@@ -32,7 +33,8 @@ class MyApp extends StatelessWidget {
         '/tela-recuperar-senha': (context) => TelaRecuperarSenha(),
         '/tela-escolher-plano': (context) => TelaEscolhaPlano(),
         '/tela-principal': (context) => TelaPrincipal(),
-        '/tela-perfil': (context) => TelaPerfil()
+        '/tela-perfil': (context) => TelaPerfil(),
+        '/tela-ver-meus-itens': (context) => TelaVerMeusItens()
       }
     );
   }

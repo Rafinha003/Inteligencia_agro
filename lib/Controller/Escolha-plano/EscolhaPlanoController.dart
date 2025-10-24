@@ -13,24 +13,33 @@ class EscolhaPlanoController {
         return "Usuário não autenticado.";
       }
 
-      // Data atual
       DateTime dataCompra = DateTime.now();
 
-      // Data de validade (1 ano depois)
       DateTime dataValidade = DateTime(
         dataCompra.year + 1,
         dataCompra.month,
         dataCompra.day,
       );
 
-      await _firestore.collection("Planos").doc(user.uid).set({
-        "uid": user.uid,
-        "plano": plano,
-        "dataCompra": dataCompra,
-        "dataValidade": dataValidade,
-      });
+      DocumentReference planoRef = _firestore.collection("Planos").doc(user.uid);
+      DocumentSnapshot planoSnapshot = await planoRef.get();
 
-      return null; // sucesso
+      if (planoSnapshot.exists) {
+        await planoRef.update({
+          "plano": plano,
+          "dataValidade": dataValidade,
+          "dataAlteracaoPlano": dataCompra,
+        });
+      } else {
+        await planoRef.set({
+          "uid": user.uid,
+          "plano": plano,
+          "dataCompra": dataCompra,
+          "dataValidade": dataValidade,
+        });
+      }
+
+      return null; 
     } catch (e) {
       return "Erro ao salvar plano: $e";
     }
