@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:inteligencia_agro/View/tela-historico-transacao/tela-historico-transacao.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-perfil.dart';
 
@@ -24,7 +25,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
   final List<Widget> _telas = [
     const TelaListagem(),
     const Center(child: Text("Chat", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
-    const Center(child: Text("Financeiro", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
+    const TelaHistoricoTransacao(),
     const TelaPerfil(), // tela de perfil
   ];
 

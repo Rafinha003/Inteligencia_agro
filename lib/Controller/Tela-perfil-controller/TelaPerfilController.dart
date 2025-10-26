@@ -8,7 +8,7 @@ class TelaPerfilController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Obter dados do usuário logado
+  // 🔹 Obter dados do usuário logado
   Future<Map<String, dynamic>?> obterUsuario() async {
     User? user = _auth.currentUser;
     if (user == null) return null;
@@ -21,7 +21,7 @@ class TelaPerfilController {
     }
   }
 
-  // Atualizar a descrição do perfil
+  // 🔹 Atualizar a descrição do perfil
   Future<void> atualizarDescricao(String descricao) async {
     User? user = _auth.currentUser;
     if (user == null) return;
@@ -31,12 +31,11 @@ class TelaPerfilController {
     });
   }
 
+  // 🔹 Atualizar a foto de perfil
   Future<void> atualizarFotoPerfil(String base64Image) async {
     try {
       User? user = _auth.currentUser;
-      if (user == null) {
-        throw Exception("Usuário não logado");
-      }
+      if (user == null) throw Exception("Usuário não logado");
 
       await _firestore.collection('Usuario').doc(user.uid).update({
         'fotoPerfil': base64Image,
@@ -47,7 +46,8 @@ class TelaPerfilController {
     }
   }
 
-   Future<List<String>> obterTipoTransacao() async {
+  // 🔹 Obter tipos de transação
+  Future<List<String>> obterTipoTransacao() async {
     try {
       QuerySnapshot snapshot = await _firestore.collection('TipoTransacao').get();
 
@@ -58,45 +58,45 @@ class TelaPerfilController {
         }
       }
 
-      return []; // retorna lista vazia caso não tenha nada
+      return [];
     } catch (e) {
       print("Erro ao obter tipos de transação: $e");
       return [];
     }
   }
 
-    Future<void> salvarItem({
-  required String nome,
-  required String ano,
-  required String descricao,
-  required String tipoTransacao,
-  String? valor,
-  String? dias,
-  String? base64Image,
-}) async {
-  try {
-    User? user = _auth.currentUser;
-    if (user == null) throw Exception("Usuário não logado");
+  // 🔹 Salvar novo item
+  Future<void> salvarItem({
+    required String nome,
+    required String ano,
+    required String descricao,
+    required String tipoTransacao,
+    String? valor,
+    String? dias,
+    String? base64Image,
+  }) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) throw Exception("Usuário não logado");
 
-    await _firestore.collection('itens').add({
-      'uidUsuario': user.uid,
-      'nome': nome,
-      'ano': ano,
-      'descricao': descricao,
-      'tipoTransacao': tipoTransacao,
-      'valor': valor,
-      'quantidadeDias': dias,
-      'imagem': base64Image,
-      'criadoEm': DateTime.now(), // data do dia de hoje
-    });
-  } catch (e) {
-    print("Erro ao salvar item: $e");
-    rethrow;
+      await _firestore.collection('itens').add({
+        'uidUsuario': user.uid,
+        'nome': nome,
+        'ano': ano,
+        'descricao': descricao,
+        'tipoTransacao': tipoTransacao,
+        'valor': valor,
+        'quantidadeDias': dias,
+        'imagem': base64Image,
+        'criadoEm': DateTime.now(),
+      });
+    } catch (e) {
+      print("Erro ao salvar item: $e");
+      rethrow;
+    }
   }
-}
 
-
-  // 🔹 Função utilitária: converte imagem para base64 <= 1MB
+  // 🔹 Converter imagem para Base64 (otimizada)
   Future<String> converterImagemParaBase64(Uint8List bytes) async {
     img.Image? imagemDecode = img.decodeImage(bytes);
     if (imagemDecode != null) {
@@ -104,17 +104,16 @@ class TelaPerfilController {
       Uint8List bytesRedimensionados = Uint8List.fromList(
         img.encodeJpg(imagemRedimensionada, quality: 85),
       );
-
       return base64Encode(bytesRedimensionados);
     } else {
       throw Exception("Falha ao processar imagem");
     }
   }
 
-   Future<List<Map<String, dynamic>>> obterItensUsuario() async {
+  // 🔹 Obter itens do usuário logado
+  Future<List<Map<String, dynamic>>> obterItensUsuario() async {
     try {
       User? user = _auth.currentUser;
-
       if (user == null) return [];
 
       QuerySnapshot snapshot = await _firestore
@@ -129,13 +128,80 @@ class TelaPerfilController {
           'ano': data['ano'] ?? '',
           'tipoTransacao': data['tipoTransacao'] ?? '',
           'valor': data['valor'] ?? '',
-          'imagem': data['imagem'] ?? '', // ✅ adiciona imagem
+          'imagem': data['imagem'] ?? '',
         };
       }).toList();
     } catch (e) {
+      print("Erro ao obter itens do usuário: $e");
       return [];
     }
+  }
+
+  // 🔹 Obter propostas do usuário (somente as PENDENTES)
+  Future<List<Map<String, dynamic>>> obterPropostasDoUsuario() async {
+  try {
+    User? user = _auth.currentUser;
+    if (user == null) return [];
+
+    // 🔹 Buscar propostas em que o usuário logado é o vendedor
+    QuerySnapshot propostasSnapshot = await _firestore
+        .collection('propostas')
+        .where('uidVendedor', isEqualTo: user.uid)
+        .get();
+
+    List<Map<String, dynamic>> propostas = [];
+
+    for (var doc in propostasSnapshot.docs) {
+      final proposta = doc.data() as Map<String, dynamic>;
+      final String idProposta = doc.id;
+
+      // 🔸 Ignora propostas com status aceito ou recusado
+      if (proposta.containsKey('status') &&
+          (proposta['status'] == 'aceito' || proposta['status'] == 'recusado')) {
+        continue;
+      }
+
+      // 🔹 Buscar dados do item
+      final itemRef = await _firestore.collection('itens').doc(proposta['uidItem']).get();
+      final itemData = itemRef.data() as Map<String, dynamic>?;
+
+      // 🔹 Buscar dados do comprador
+      final compradorRef =
+          await _firestore.collection('Usuario').doc(proposta['uidComprador']).get();
+      final compradorData = compradorRef.data() as Map<String, dynamic>?;
+
+      if (itemData != null && compradorData != null) {
+        propostas.add({
+          'idProposta': idProposta,
+          'imagemItem': itemData['imagem'] ?? '',
+          'nomeItem': itemData['nome'] ?? 'Sem nome',
+          'nomeComprador': compradorData['nome'] ?? 'Desconhecido',
+          'telefoneComprador': compradorData['telefone'] ?? 'Não informado',
+        });
+      }
+    }
+    return propostas;
+  } catch (e) {
+    print(" Erro ao obter propostas: $e");
+    return [];
   }
 }
 
 
+
+  // 🔹 Atualizar status da proposta (aceito ou recusado)
+  Future<void> atualizarStatusProposta(String idProposta, String status) async {
+    try {
+      if (status != 'aceito' && status != 'recusado') {
+        throw Exception("Status inválido: $status");
+      }
+
+      await _firestore.collection('propostas').doc(idProposta).update({
+        'status': status,
+      });
+    } catch (e) {
+      print("Erro ao atualizar status da proposta: $e");
+      rethrow;
+    }
+  }
+}

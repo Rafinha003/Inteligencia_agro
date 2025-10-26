@@ -4,9 +4,11 @@ import 'package:device_preview/device_preview.dart';
 import 'package:inteligencia_agro/View/Tela-escolha-plano/tela-escolha-plano.dart';
 import 'package:inteligencia_agro/View/Tela-principal/tela-principal.dart';
 import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
+import 'package:inteligencia_agro/View/tela-historico-transacao/tela-historico-transacao.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem-detalhe/tela-listagem-detalhe.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem.dart';
 import 'package:inteligencia_agro/View/tela-login/tela-login.dart';
+import 'package:inteligencia_agro/View/tela-perfil/tela-exibir-propostas/tela-exibir-propostas.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-perfil.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-ver-meus-itens/tela-ver-meus-itens.dart';
 import 'package:inteligencia_agro/View/tela-recuperar-senha/tela-recuperar-senha.dart';
@@ -38,9 +40,10 @@ class MyApp extends StatelessWidget {
     '/tela-perfil': (context) => TelaPerfil(),
     '/tela-ver-meus-itens': (context) => TelaVerMeusItens(),
     '/tela-listagem': (context) => TelaListagem(),
+    '/tela-exibir-propostas': (context) => TelaExibirProposta(),
+    '/tela-historico-transacao': (context) => TelaHistoricoTransacao()
   },
 
-  // 🔹 Novo método que resolve rotas com argumentos
   onGenerateRoute: (settings) {
     if (settings.name == '/tela-listagem-detalhe') {
       final args = settings.arguments as Map<String, dynamic>;
@@ -50,7 +53,7 @@ class MyApp extends StatelessWidget {
         builder: (context) => TelaListagemDetalhe(itemId: itemId),
       );
     }
-    return null; // se nenhuma rota bater
+    return null; 
   },
 );
   }

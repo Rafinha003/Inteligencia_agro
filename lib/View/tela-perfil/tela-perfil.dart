@@ -4,6 +4,8 @@ import 'package:inteligencia_agro/Controller/Tela-perfil-controller/TelaPerfilCo
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+import 'package:inteligencia_agro/View/tela-perfil/tela-exibir-propostas/tela-exibir-propostas.dart';
+import 'package:inteligencia_agro/View/tela-perfil/tela-ver-meus-itens/tela-ver-meus-itens.dart';
 
 
 class TelaPerfil extends StatefulWidget {
@@ -40,7 +42,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
           estado = dados['endereco'][0]['estado'] ?? '';
         }
         _descricaoController.text = dados['descricao'] ?? '';
-        fotoPerfilBase64 = dados['fotoPerfil']; // se existir
+        fotoPerfilBase64 = dados['fotoPerfil']; 
       });
     }
   }
@@ -192,7 +194,6 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
             const SizedBox(height: 24),
 
-            // 🔹 Botões de ação
             Column(
               children: [
                 _botaoAcao("Upgrade de Plano", true, () {
@@ -200,10 +201,22 @@ class _TelaPerfilState extends State<TelaPerfil> {
                 }),
                 const SizedBox(height: 12),
                 _botaoAcao("Ver meus itens", true, () {
-                  Navigator.pushReplacementNamed(context, '/tela-ver-meus-itens');
+                     Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TelaVerMeusItens(),
+                                  ),
+                                );
                 }),
                 const SizedBox(height: 12),
-                _botaoAcao("Ver propostas", false, () {}),
+                _botaoAcao("Ver propostas", false, () {
+                   Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TelaExibirProposta(),
+                                  ),
+                                );
+                }),
               ],
             ),
           ],

@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TelaListagemController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<List<Map<String, dynamic>>> obterTodosItens() async {
     try {
@@ -74,6 +76,26 @@ class TelaListagemController {
     } catch (e) {
       print('Erro ao buscar item com usuário: $e');
       return null;
+    }
+  }
+
+    Future<void> enviarProposta({
+    required String uidItem,
+    required String uidVendedor,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception("Usuário não logado");
+
+      await _firestore.collection('propostas').add({
+        'uidItem': uidItem,
+        'uidComprador': user.uid,
+        'uidVendedor': uidVendedor,
+        'criadoEm': DateTime.now(),
+      });
+    } catch (e) {
+      print('Erro ao enviar proposta: $e');
+      rethrow;
     }
   }
 }
