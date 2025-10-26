@@ -66,34 +66,35 @@ class TelaPerfilController {
   }
 
     Future<void> salvarItem({
-    required String nome,
-    required String ano,
-    required String descricao,
-    required String tipoTransacao,
-    String? valor,
-    String? dias,
-    String? base64Image,
-  }) async {
-    try {
-      User? user = _auth.currentUser;
-      if (user == null) throw Exception("Usuário não logado");
+  required String nome,
+  required String ano,
+  required String descricao,
+  required String tipoTransacao,
+  String? valor,
+  String? dias,
+  String? base64Image,
+}) async {
+  try {
+    User? user = _auth.currentUser;
+    if (user == null) throw Exception("Usuário não logado");
 
-      await _firestore.collection('itens').add({
-        'uidUsuario': user.uid,
-        'nome': nome,
-        'ano': ano,
-        'descricao': descricao,
-        'tipoTransacao': tipoTransacao,
-        'valor': valor,
-        'quantidadeDias': dias,
-        'imagem': base64Image,
-        'criadoEm': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print("Erro ao salvar item: $e");
-      rethrow;
-    }
+    await _firestore.collection('itens').add({
+      'uidUsuario': user.uid,
+      'nome': nome,
+      'ano': ano,
+      'descricao': descricao,
+      'tipoTransacao': tipoTransacao,
+      'valor': valor,
+      'quantidadeDias': dias,
+      'imagem': base64Image,
+      'criadoEm': DateTime.now(), // data do dia de hoje
+    });
+  } catch (e) {
+    print("Erro ao salvar item: $e");
+    rethrow;
   }
+}
+
 
   // 🔹 Função utilitária: converte imagem para base64 <= 1MB
   Future<String> converterImagemParaBase64(Uint8List bytes) async {
@@ -110,14 +111,15 @@ class TelaPerfilController {
     }
   }
 
-  Future<List<Map<String, dynamic>>> obterItensUsuario() async {
+   Future<List<Map<String, dynamic>>> obterItensUsuario() async {
     try {
       User? user = _auth.currentUser;
+
       if (user == null) return [];
 
       QuerySnapshot snapshot = await _firestore
           .collection('itens')
-          .where('uid', isEqualTo: user.uid)
+          .where('uidUsuario', isEqualTo: user.uid)
           .get();
 
       return snapshot.docs.map((doc) {
@@ -127,12 +129,13 @@ class TelaPerfilController {
           'ano': data['ano'] ?? '',
           'tipoTransacao': data['tipoTransacao'] ?? '',
           'valor': data['valor'] ?? '',
+          'imagem': data['imagem'] ?? '', // ✅ adiciona imagem
         };
       }).toList();
     } catch (e) {
-      print("Erro ao obter itens do usuário: $e");
       return [];
     }
   }
-
 }
+
+
