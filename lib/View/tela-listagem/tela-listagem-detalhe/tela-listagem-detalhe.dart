@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/tela-listagem/TelaListagemController.dart';
+import 'package:inteligencia_agro/View/Tela-chat/tela-chat-pessoal/chat-pessoal.dart';
 
 class TelaListagemDetalhe extends StatefulWidget {
   final String itemId;
@@ -69,6 +70,27 @@ class _TelaListagemDetalheState extends State<TelaListagemDetalhe> {
       if (mounted) setState(() => enviando = false);
     }
   }
+
+   void _abrirChat() {
+    if (usuarioData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Usuário vendedor não encontrado.")),
+      );
+      return;
+    }
+
+    final uidVendedor = itemData?['uidUsuario'];
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaChatPessoal(
+          uidVendedor: uidVendedor,
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +205,21 @@ class _TelaListagemDetalheState extends State<TelaListagemDetalhe> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF045006), width: 2), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text("Entrar em Contato via Chat", style: TextStyle(fontSize: 18, color: Color(0xFF045006), fontWeight: FontWeight.bold)),
+            onPressed: _abrirChat,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF045006), width: 2),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              "Entrar em Contato via Chat",
+              style: TextStyle(
+                  fontSize: 18,
+                  color: Color(0xFF045006),
+                  fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
