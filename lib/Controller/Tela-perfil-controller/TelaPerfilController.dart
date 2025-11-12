@@ -65,52 +65,47 @@ class TelaPerfilController {
     }
   }
 
-  // 🔹 Salvar novo item
-  Future<void> salvarItem({
+ Future<void> salvarItem({
     required String nome,
     required String ano,
     required String descricao,
     required String tipoTransacao,
+    required String tipoProduto,
     String? valor,
     String? dias,
     String? base64Image,
+    String? itemId, // <-- ID do item para edição
   }) async {
     try {
       User? user = _auth.currentUser;
       if (user == null) throw Exception("Usuário não logado");
 
-      await _firestore.collection('itens').add({
+      final data = {
         'uidUsuario': user.uid,
         'nome': nome,
         'ano': ano,
         'descricao': descricao,
         'tipoTransacao': tipoTransacao,
+        'tipoProduto': tipoProduto,
         'valor': valor,
         'quantidadeDias': dias,
         'imagem': base64Image,
         'criadoEm': DateTime.now(),
-      });
+      };
+
+      if (itemId == null) {
+        // Novo item
+        await _firestore.collection('itens').add(data);
+      } else {
+        // Editar item existente
+        await _firestore.collection('itens').doc(itemId).update(data);
+      }
     } catch (e) {
       print("Erro ao salvar item: $e");
       rethrow;
     }
   }
 
-  // 🔹 Converter imagem para Base64 (otimizada)
-  Future<String> converterImagemParaBase64(Uint8List bytes) async {
-    img.Image? imagemDecode = img.decodeImage(bytes);
-    if (imagemDecode != null) {
-      img.Image imagemRedimensionada = img.copyResize(imagemDecode, width: 300);
-      Uint8List bytesRedimensionados = Uint8List.fromList(
-        img.encodeJpg(imagemRedimensionada, quality: 85),
-      );
-      return base64Encode(bytesRedimensionados);
-    } else {
-      throw Exception("Falha ao processar imagem");
-    }
-  }
-
-  // 🔹 Obter itens do usuário logado
   Future<List<Map<String, dynamic>>> obterItensUsuario() async {
     try {
       User? user = _auth.currentUser;
@@ -124,16 +119,33 @@ class TelaPerfilController {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return {
+          'id': doc.id, 
           'nome': data['nome'] ?? '',
           'ano': data['ano'] ?? '',
+          'descricao': data['descricao'] ?? '',
           'tipoTransacao': data['tipoTransacao'] ?? '',
+          'tipoProduto': data['tipoProduto'] ?? '',
           'valor': data['valor'] ?? '',
+          'quantidadeDias': data['quantidadeDias'] ?? '',
           'imagem': data['imagem'] ?? '',
         };
       }).toList();
     } catch (e) {
       print("Erro ao obter itens do usuário: $e");
       return [];
+    }
+  }
+ 
+  Future<String> converterImagemParaBase64(Uint8List bytes) async {
+    img.Image? imagemDecode = img.decodeImage(bytes);
+    if (imagemDecode != null) {
+      img.Image imagemRedimensionada = img.copyResize(imagemDecode, width: 300);
+      Uint8List bytesRedimensionados = Uint8List.fromList(
+        img.encodeJpg(imagemRedimensionada, quality: 85),
+      );
+      return base64Encode(bytesRedimensionados);
+    } else {
+      throw Exception("Falha ao processar imagem");
     }
   }
 

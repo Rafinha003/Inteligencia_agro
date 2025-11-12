@@ -77,24 +77,23 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
     final fotoWidget = _buildFotoPerfil(fotoPerfilBase64);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFFF7F7F7),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
         child: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF045006), Color(0xFF097C0D)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
+          backgroundColor: const Color(0xFF045006),
+          centerTitle: true,
+          elevation: 4,
+          iconTheme: const IconThemeData(color: Colors.white), // 👈 seta branca
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
           ),
           title: Row(
             children: [
-              CircleAvatar(radius: 22, backgroundImage: fotoWidget),
+              CircleAvatar(
+                radius: 22,
+                backgroundImage: fotoWidget,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -102,15 +101,12 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 19,
+                    fontSize: 21,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
           ),
         ),
       ),
@@ -124,7 +120,6 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
         ),
         child: Column(
           children: [
-            const SizedBox(height: 100),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: _controller.obterMensagens(widget.uidVendedor),
@@ -148,8 +143,8 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
 
                   return ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     itemCount: mensagens.length,
                     itemBuilder: (context, index) {
                       final msg = mensagens[index];
@@ -242,14 +237,18 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
                 controller: _mensagemController,
                 style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.chat_bubble_outline_rounded,
-                      color: Color(0xFF045006)),
+                  prefixIcon: const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: Color(0xFF045006),
+                  ),
                   hintText: "Digite sua mensagem...",
                   hintStyle: const TextStyle(color: Colors.black45),
                   filled: true,
                   fillColor: const Color(0xFFF5F5F5),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
                     borderSide:

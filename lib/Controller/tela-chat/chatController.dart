@@ -61,5 +61,64 @@ class ChatController {
     }
   }
 
+  Future<List<Map<String, dynamic>>> obterConversasUsuario() async {
+  final user = _auth.currentUser;
+  if (user == null) throw Exception("Usuário não autenticado.");
+
+  try {
+    // 🔹 Tenta buscar com ordenação — se falhar, busca sem orderBy
+    QuerySnapshot<Map<String, dynamic>> querySnapshot;
+    try {
+      querySnapshot = await _firestore
+          .collection('chats')
+          .where('usuarios', arrayContains: user.uid)
+          .orderBy('ultimaMensagemEm', descending: true)
+          .get();
+    } catch (_) {
+      querySnapshot = await _firestore
+          .collection('chats')
+          .where('usuarios', arrayContains: user.uid)
+          .get();
+    }
+
+    List<Map<String, dynamic>> conversas = [];
+
+    for (var doc in querySnapshot.docs) {
+      final data = doc.data();
+      final List usuarios = (data['usuarios'] ?? []) as List;
+
+      if (usuarios.isEmpty || !usuarios.contains(user.uid)) continue;
+
+      final outroUid = usuarios.firstWhere(
+        (uid) => uid != user.uid,
+        orElse: () => null,
+      );
+
+      if (outroUid == null) continue;
+
+      // 🔹 Busca dados do outro usuário
+      final outroDoc =
+          await _firestore.collection('Usuario').doc(outroUid).get();
+      final outroData = outroDoc.data() ?? {};
+
+      conversas.add({
+        'uidOutroUsuario': outroUid,
+        'nome': outroData['nome'] ?? 'Usuário',
+        'fotoPerfil': outroData['fotoPerfil'],
+        'ultimoTexto': data['ultimoTexto'] ?? '',
+        'ultimaMensagemEm': data['ultimaMensagemEm'],
+      });
+    }
+
+    return conversas;
+  } catch (e) {
+    print("❌ Erro ao obter conversas: $e");
+    return [];
+  }
+}
+
+
+
   String? obterUidUsuarioAtual() => _auth.currentUser?.uid;
+  
 }
