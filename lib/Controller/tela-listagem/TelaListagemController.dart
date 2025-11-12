@@ -5,33 +5,54 @@ class TelaListagemController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<List<Map<String, dynamic>>> obterTodosItens() async {
-    try {
-      final snapshot = await _firestore.collection('itens').get();
+ Future<List<Map<String, dynamic>>> obterTodosItens() async {
+  try {
+    // 1️⃣ Busca todos os itens normalmente
+    final snapshot = await _firestore.collection('itens').get();
+    final todosItens = snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        'nome': data['nome'] ?? '',
+        'ano': data['ano'] ?? '',
+        'tipoTransacao': data['tipoTransacao'] ?? '',
+        'valor': data['valor'] ?? '',
+        'imagem': data['imagem'] ?? '',
+        'estado': data['estado'] ?? '',
+        'cidade': data['cidade'] ?? '',
+      };
+    }).toList();
 
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'id': doc.id, 
-          'nome': data['nome'] ?? '',
-          'ano': data['ano'] ?? '',
-          'tipoTransacao': data['tipoTransacao'] ?? '',
-          'valor': data['valor'] ?? '',
-          'imagem': data['imagem'] ?? '',
-        };
-      }).toList();
-    } catch (e) {
-      print('Erro ao buscar itens: $e');
-      return [];
-    }
+    // 2️⃣ Busca todos os uidItem das propostas com status "aceito"
+    final propostasAceitasSnapshot = await _firestore
+        .collection('propostas')
+        .where('status', isEqualTo: 'aceito')
+        .get();
+
+    final Set<String> itensComPropostaAceita = propostasAceitasSnapshot.docs
+        .map((doc) => doc['uidItem']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    // 3️⃣ Filtra removendo os itens que já têm proposta aceita
+    final itensFiltrados = todosItens
+        .where((item) => !itensComPropostaAceita.contains(item['id']))
+        .toList();
+
+    return itensFiltrados;
+  } catch (e) {
+    print('Erro ao buscar itens: $e');
+    return [];
   }
+}
 
+
+
+  // 🔹 Obtém um item por ID
   Future<Map<String, dynamic>?> obterItemPorId(String itemId) async {
     try {
       final doc = await _firestore.collection('itens').doc(itemId).get();
-      if (doc.exists) {
-        return doc.data();
-      }
+      if (doc.exists) return doc.data();
       return null;
     } catch (e) {
       print('Erro ao buscar item por ID: $e');
@@ -39,12 +60,11 @@ class TelaListagemController {
     }
   }
 
+  // 🔹 Obtém usuário pelo UID
   Future<Map<String, dynamic>?> obterUsuarioPorUid(String uidUsuario) async {
     try {
       final doc = await _firestore.collection('Usuario').doc(uidUsuario).get();
-      if (doc.exists) {
-        return doc.data();
-      }
+      if (doc.exists) return doc.data();
       return null;
     } catch (e) {
       print('Erro ao buscar usuário: $e');
@@ -52,32 +72,34 @@ class TelaListagemController {
     }
   }
 
-  Future<Map<String, dynamic>?> obterItemComUsuario(String itemId) async {
-    try {
-      final itemDoc = await _firestore.collection('itens').doc(itemId).get();
-      if (!itemDoc.exists) return null;
+  // 🔹 Obtém item com dados do usuário
+ Future<Map<String, dynamic>?> obterItemComUsuario(String itemId) async {
+  try {
+    final itemDoc = await _firestore.collection('itens').doc(itemId).get();
+    if (!itemDoc.exists) return null;
 
-      final itemData = itemDoc.data()!;
-      Map<String, dynamic>? usuarioData;
+    final itemData = itemDoc.data()!;
+    Map<String, dynamic>? usuarioData;
 
-      final uidUsuario = itemData['uidUsuario'];
-      if (uidUsuario != null && uidUsuario.toString().isNotEmpty) {
-        final usuarioDoc =
-            await _firestore.collection('Usuario').doc(uidUsuario).get();
-        if (usuarioDoc.exists) {
-          usuarioData = usuarioDoc.data();
-        }
+    final uidUsuario = itemData['uidUsuario'];
+    if (uidUsuario != null && uidUsuario.toString().isNotEmpty) {
+      final usuarioDoc =
+          await _firestore.collection('Usuario').doc(uidUsuario).get();
+      if (usuarioDoc.exists) {
+        usuarioData = usuarioDoc.data();
       }
-
-      return {
-        'item': itemData,
-        'usuario': usuarioData,
-      };
-    } catch (e) {
-      print('Erro ao buscar item com usuário: $e');
-      return null;
     }
+
+    return {
+      'item': itemData,
+      'usuario': usuarioData,
+    };
+  } catch (e) {
+    print('Erro ao obter item com usuário: $e');
+    return null;
   }
+}
+
 
     Future<void> enviarProposta({
     required String uidItem,
@@ -99,3 +121,4 @@ class TelaListagemController {
     }
   }
 }
+  

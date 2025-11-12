@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:inteligencia_agro/Controller/Ibge/ibgeController.dart';
 import 'package:inteligencia_agro/Controller/Tela-perfil-controller/TelaPerfilController.dart';
+
 
 class TelaVerMeusItens extends StatefulWidget {
   const TelaVerMeusItens({Key? key}) : super(key: key);
@@ -13,6 +15,7 @@ class TelaVerMeusItens extends StatefulWidget {
 
 class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
   final TelaPerfilController _controller = TelaPerfilController();
+  final IbgeController _ibgeController = IbgeController();
   final TextEditingController _pesquisaController = TextEditingController();
   String filtro = "";
 
@@ -153,6 +156,8 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
                                       ),
                                       const SizedBox(height: 6),
                                       Text("Ano: ${item['ano']}"),
+                                      Text("Estado: ${item['estado'] ?? '-'}"),
+                                      Text("Cidade: ${item['cidade'] ?? '-'}"),
                                       Text("Tipo Transação: ${item['tipoTransacao']}"),
                                       Text("Tipo Produto: ${item['tipoProduto']}"),
                                       if (item['tipoTransacao'] != 'Troca')
@@ -215,6 +220,10 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
     final diasController = TextEditingController(text: item?['quantidadeDias'] ?? '');
     String tipoSelecionado = item?['tipoTransacao'] ?? "Venda";
     String tipoProdutoSelecionado = item?['tipoProduto'] ?? "Máquina";
+    String? estadoSelecionado = item?['estado'];
+    String? cidadeSelecionada = item?['cidade'];
+    List<Map<String, dynamic>> estados = [];
+    List<String> cidades = [];
     Uint8List? imagemSelecionada = item?['imagem'] != null && item?['imagem'] != ''
         ? base64Decode(item!['imagem'])
         : null;
@@ -229,17 +238,27 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final mediaQuery = MediaQuery.of(context);
+            Future<void> carregarEstados() async {
+              estados = await _ibgeController.buscarEstados();
+              setModalState(() {});
+            }
+
+            Future<void> carregarCidades(String uf) async {
+              cidades = await _ibgeController.buscarCidades(uf);
+              setModalState(() {});
+            }
+
+            if (estados.isEmpty) carregarEstados();
+
             return Padding(
               padding: EdgeInsets.only(
                 left: 20,
                 right: 20,
                 top: 16,
-                bottom: mediaQuery.viewInsets.bottom + 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
               child: SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
                       child: Container(
@@ -252,22 +271,16 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
                         ),
                       ),
                     ),
-                    Center(
-                      child: Text(
-                        item == null ? "Adicionar Item" : "Editar Item",
+                    Text(item == null ? "Adicionar Item" : "Editar Item",
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF045006),
-                        ),
-                      ),
-                    ),
+                            fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF045006))),
                     const SizedBox(height: 20),
+
+                    // IMAGEM
                     GestureDetector(
                       onTap: () async {
                         final picker = ImagePicker();
-                        final XFile? imagem =
-                            await picker.pickImage(source: ImageSource.gallery);
+                        final XFile? imagem = await picker.pickImage(source: ImageSource.gallery);
                         if (imagem != null) {
                           final bytes = await imagem.readAsBytes();
                           setModalState(() => imagemSelecionada = bytes);
@@ -301,8 +314,7 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
                                     top: 8,
                                     right: 8,
                                     child: GestureDetector(
-                                      onTap: () =>
-                                          setModalState(() => imagemSelecionada = null),
+                                      onTap: () => setModalState(() => imagemSelecionada = null),
                                       child: Container(
                                         decoration: const BoxDecoration(
                                           color: Colors.black54,
@@ -326,6 +338,41 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
                     _buildTextField("Descrição", descricaoController, maxLines: 2),
                     const SizedBox(height: 12),
 
+                    // ESTADO
+                    DropdownButtonFormField<String>(
+                      value: estadoSelecionado,
+                      decoration: _dropdownDecoration("Estado"),
+                      items: estados
+                          .map((e) => DropdownMenuItem(
+                                  value: e['sigla'] as String,
+                                  child: Text(e['nome'] as String),
+                              ))
+                          .toList(),
+                      onChanged: (value) async {
+                        estadoSelecionado = value;
+                        cidadeSelecionada = null;
+                        cidades.clear();
+                        await carregarCidades(value!);
+                        setModalState(() {});
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // CIDADE
+                    DropdownButtonFormField<String>(
+                      value: cidadeSelecionada,
+                      decoration: _dropdownDecoration("Cidade"),
+                      items: cidades
+                          .map((cidade) => DropdownMenuItem(
+                                value: cidade,
+                                child: Text(cidade),
+                              ))
+                          .toList(),
+                      onChanged: (value) => setModalState(() => cidadeSelecionada = value),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // RESTANTE DOS CAMPOS
                     DropdownButtonFormField<String>(
                       value: tipoSelecionado,
                       decoration: _dropdownDecoration("Tipo de Transação"),
@@ -359,68 +406,57 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
                           keyboard: TextInputType.number),
 
                     const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text("Cancelar"),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (nomeController.text.trim().isEmpty ||
-                                  anoController.text.trim().isEmpty ||
-                                  descricaoController.text.trim().isEmpty ||
-                                  tipoSelecionado.isEmpty ||
-                                  tipoProdutoSelecionado.isEmpty ||
-                                  imagemSelecionada == null ||
-                                  (tipoSelecionado != "Troca" &&
-                                      valorController.text.trim().isEmpty) ||
-                                  (tipoSelecionado == "Aluga" &&
-                                      diasController.text.trim().isEmpty)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Todos os campos devem ser preenchidos."),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                                return;
-                              }
 
-                              final imagemBase64 = base64Encode(imagemSelecionada!);
-
-                              try {
-                                await _controller.salvarItem(
-                                  nome: nomeController.text.trim(),
-                                  ano: anoController.text.trim(),
-                                  descricao: descricaoController.text.trim(),
-                                  tipoTransacao: tipoSelecionado,
-                                  tipoProduto: tipoProdutoSelecionado,
-                                  valor: valorController.text.trim(),
-                                  dias: diasController.text.trim(),
-                                  base64Image: imagemBase64,
-                                  itemId: item?['id'], // <-- edição se tiver ID
-                                );
-
-                                Navigator.pop(context);
-                                setState(() {});
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Erro ao salvar item: $e")),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3FAF47),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (nomeController.text.trim().isEmpty ||
+                            anoController.text.trim().isEmpty ||
+                            descricaoController.text.trim().isEmpty ||
+                            tipoSelecionado.isEmpty ||
+                            tipoProdutoSelecionado.isEmpty ||
+                            imagemSelecionada == null ||
+                            estadoSelecionado == null ||
+                            cidadeSelecionada == null ||
+                            (tipoSelecionado != "Troca" &&
+                                valorController.text.trim().isEmpty) ||
+                            (tipoSelecionado == "Aluga" &&
+                                diasController.text.trim().isEmpty)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Todos os campos devem ser preenchidos."),
+                              backgroundColor: Colors.red,
                             ),
-                            child: const Text("Salvar", style: TextStyle(color: Colors.white)),
-                          ),
+                          );
+                          return;
+                        }
+
+                        final imagemBase64 = base64Encode(imagemSelecionada!);
+
+                        await _controller.salvarItem(
+                          nome: nomeController.text.trim(),
+                          ano: anoController.text.trim(),
+                          descricao: descricaoController.text.trim(),
+                          tipoTransacao: tipoSelecionado,
+                          tipoProduto: tipoProdutoSelecionado,
+                          valor: valorController.text.trim(),
+                          dias: diasController.text.trim(),
+                          base64Image: imagemBase64,
+                          estado: estadoSelecionado,
+                          cidade: cidadeSelecionada,
+                          itemId: item?['id'],
+                        );
+
+                        Navigator.pop(context);
+                        setState(() {});
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3FAF47),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
+                      ),
+                      child: const Text("Salvar", style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
