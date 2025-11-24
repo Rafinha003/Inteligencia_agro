@@ -5,9 +5,13 @@ class TelaListagemController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
- Future<List<Map<String, dynamic>>> obterTodosItens() async {
+Future<List<Map<String, dynamic>>> obterTodosItens() async {
   try {
-    // 1️⃣ Busca todos os itens normalmente
+    final usuarioLogado = FirebaseAuth.instance.currentUser;
+    if (usuarioLogado == null) {
+      return [];
+    }
+
     final snapshot = await _firestore.collection('itens').get();
     final todosItens = snapshot.docs.map((doc) {
       final data = doc.data();
@@ -20,10 +24,10 @@ class TelaListagemController {
         'imagem': data['imagem'] ?? '',
         'estado': data['estado'] ?? '',
         'cidade': data['cidade'] ?? '',
+        'uidUsuario': data['uidUsuario'] ?? '',
       };
     }).toList();
 
-    // 2️⃣ Busca todos os uidItem das propostas com status "aceito"
     final propostasAceitasSnapshot = await _firestore
         .collection('propostas')
         .where('status', isEqualTo: 'aceito')
@@ -34,12 +38,21 @@ class TelaListagemController {
         .where((id) => id.isNotEmpty)
         .toSet();
 
-    // 3️⃣ Filtra removendo os itens que já têm proposta aceita
-    final itensFiltrados = todosItens
-        .where((item) => !itensComPropostaAceita.contains(item['id']))
-        .toList();
+    
+    final itensFiltrados = todosItens.where((item) {
+      final bool pertenceOutroUsuario = item['uidUsuario'] != usuarioLogado.uid;
+      final bool semPropostaAceita = !itensComPropostaAceita.contains(item['id']);
+      return pertenceOutroUsuario && semPropostaAceita;
+    }).toList();
 
-    return itensFiltrados;
+   
+    final itensFinal = itensFiltrados.map((item) {
+      final copy = Map<String, dynamic>.from(item);
+      copy.remove('uidUsuario');
+      return copy;
+    }).toList();
+
+    return itensFinal;
   } catch (e) {
     print('Erro ao buscar itens: $e');
     return [];
@@ -48,7 +61,6 @@ class TelaListagemController {
 
 
 
-  // 🔹 Obtém um item por ID
   Future<Map<String, dynamic>?> obterItemPorId(String itemId) async {
     try {
       final doc = await _firestore.collection('itens').doc(itemId).get();
@@ -60,7 +72,7 @@ class TelaListagemController {
     }
   }
 
-  // 🔹 Obtém usuário pelo UID
+
   Future<Map<String, dynamic>?> obterUsuarioPorUid(String uidUsuario) async {
     try {
       final doc = await _firestore.collection('Usuario').doc(uidUsuario).get();
@@ -72,7 +84,9 @@ class TelaListagemController {
     }
   }
 
-  // 🔹 Obtém item com dados do usuário
+  
+
+
  Future<Map<String, dynamic>?> obterItemComUsuario(String itemId) async {
   try {
     final itemDoc = await _firestore.collection('itens').doc(itemId).get();

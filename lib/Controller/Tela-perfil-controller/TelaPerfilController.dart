@@ -65,7 +65,7 @@ class TelaPerfilController {
     }
   }
 
- Future<void> salvarItem({
+Future<void> salvarItem({
   required String nome,
   required String ano,
   required String descricao,
@@ -74,16 +74,56 @@ class TelaPerfilController {
   String? valor,
   String? dias,
   String? base64Image,
-  String? estado, // 🆕 Novo campo
-  String? cidade, // 🆕 Novo campo
-  String? itemId, // <-- ID do item para edição
+  String? estado,
+  String? cidade,
+  String? itemId,
 }) async {
   try {
     User? user = _auth.currentUser;
     if (user == null) throw Exception("Usuário não logado");
 
+    final uid = user.uid;
+
+    final planoDoc = await _firestore.collection("Planos").doc(uid).get();
+
+    final tipoPlano = planoDoc.data()?["plano"]?.toString() ?? "Gratuito";
+
+    int limite = 0;
+
+    if (tipoPlano == "Gratuito") {
+      limite = 5;
+    } else if (tipoPlano == "Basico") {
+      limite = 15;
+    } else if (tipoPlano == "Premium") {
+      limite = 9999999; 
+    }
+
+
+    final agora = DateTime.now();
+    final inicioMes = DateTime(agora.year, agora.month, 1);
+    final fimMes = DateTime(agora.year, agora.month + 1, 1);
+
+    final query = await _firestore
+        .collection("itens")
+        .where("uidUsuario", isEqualTo: uid)
+        .where("criadoEm", isGreaterThanOrEqualTo: inicioMes)
+        .where("criadoEm", isLessThan: fimMes)
+        .get();
+
+    final quantidadeMes = query.docs.length;
+
+
+    final bool isEdicao = itemId != null;
+
+    if (!isEdicao && quantidadeMes >= limite) {
+      throw Exception(
+        "Você atingiu o limite do seu plano ($tipoPlano). "
+        "Itens cadastrados este mês: $quantidadeMes / $limite",
+      );
+    }
+
     final data = {
-      'uidUsuario': user.uid,
+      'uidUsuario': uid,
       'nome': nome,
       'ano': ano,
       'descricao': descricao,
@@ -92,9 +132,9 @@ class TelaPerfilController {
       'valor': valor,
       'quantidadeDias': dias,
       'imagem': base64Image,
-      'estado': estado, 
-      'cidade': cidade, 
-      'criadoEm': DateTime.now(),
+      'estado': estado,
+      'cidade': cidade,
+      'criadoEm': itemId == null ? DateTime.now() : FieldValue.serverTimestamp(),
     };
 
     if (itemId == null) {
@@ -107,6 +147,43 @@ class TelaPerfilController {
     rethrow;
   }
 }
+
+
+Future<List<Map<String, dynamic>>> obterPropostasEnviadas() async {
+  try {
+    User? user = _auth.currentUser;
+    if (user == null) return [];
+
+    QuerySnapshot snapshot = await _firestore
+        .collection('propostas')
+        .where('uidComprador', isEqualTo: user.uid)
+        .get();
+
+    List<Map<String, dynamic>> lista = [];
+
+    for (var doc in snapshot.docs) {
+      final proposta = doc.data() as Map<String, dynamic>;
+      final id = doc.id;
+
+      final itemRef =
+          await _firestore.collection('itens').doc(proposta['uidItem']).get();
+      final itemData = itemRef.data() ?? {};
+
+      lista.add({
+        'idProposta': id,
+        'imagemItem': itemData['imagem'] ?? '',
+        'nomeItem': itemData['nome'] ?? 'Sem nome',
+        'status': proposta['status'] ?? 'pendente',
+      });
+    }
+
+    return lista;
+  } catch (e) {
+    print("Erro ao obter enviados: $e");
+    return [];
+  }
+}
+
 
 
  Future<List<Map<String, dynamic>>> obterItensUsuario() async {
@@ -155,13 +232,11 @@ class TelaPerfilController {
     }
   }
 
-  // 🔹 Obter propostas do usuário (somente as PENDENTES)
   Future<List<Map<String, dynamic>>> obterPropostasDoUsuario() async {
   try {
     User? user = _auth.currentUser;
     if (user == null) return [];
 
-    // 🔹 Buscar propostas em que o usuário logado é o vendedor
     QuerySnapshot propostasSnapshot = await _firestore
         .collection('propostas')
         .where('uidVendedor', isEqualTo: user.uid)
@@ -173,17 +248,14 @@ class TelaPerfilController {
       final proposta = doc.data() as Map<String, dynamic>;
       final String idProposta = doc.id;
 
-      // 🔸 Ignora propostas com status aceito ou recusado
       if (proposta.containsKey('status') &&
           (proposta['status'] == 'aceito' || proposta['status'] == 'recusado')) {
         continue;
       }
 
-      // 🔹 Buscar dados do item
       final itemRef = await _firestore.collection('itens').doc(proposta['uidItem']).get();
       final itemData = itemRef.data() as Map<String, dynamic>?;
 
-      // 🔹 Buscar dados do comprador
       final compradorRef =
           await _firestore.collection('Usuario').doc(proposta['uidComprador']).get();
       final compradorData = compradorRef.data() as Map<String, dynamic>?;
@@ -206,8 +278,6 @@ class TelaPerfilController {
 }
 
 
-
-  // 🔹 Atualizar status da proposta (aceito ou recusado)
   Future<void> atualizarStatusProposta(String idProposta, String status) async {
     try {
       if (status != 'aceito' && status != 'recusado') {

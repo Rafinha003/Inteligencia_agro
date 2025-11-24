@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/tela-listagem/TelaListagemController.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem-detalhe/tela-listagem-detalhe.dart';
-import 'package:inteligencia_agro/Controller/ibge/IbgeController.dart'; // 👈 Import do controller IBGE
+import 'package:inteligencia_agro/Controller/ibge/IbgeController.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TelaListagem extends StatefulWidget {
   const TelaListagem({Key? key}) : super(key: key);
@@ -13,7 +15,7 @@ class TelaListagem extends StatefulWidget {
 
 class _TelaListagemState extends State<TelaListagem> {
   final TelaListagemController _controller = TelaListagemController();
-  final IbgeController _ibgeController = IbgeController(); // 👈 Instância IBGE
+  final IbgeController _ibgeController = IbgeController();
   final TextEditingController _pesquisaController = TextEditingController();
 
   String filtro = "";
@@ -47,6 +49,28 @@ class _TelaListagemState extends State<TelaListagem> {
       setState(() => cidades = lista);
     } catch (e) {
       debugPrint("Erro ao carregar cidades: $e");
+    }
+  }
+
+  Future<bool> verificarPlanoUsuario() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) return true;
+
+      final doc = await FirebaseFirestore.instance
+          .collection("Planos")
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists) return true;
+
+      final tipoPlano = doc.data()?["plano"] ?? "Gratuito";
+
+      return tipoPlano != "Gratuito";
+    } catch (e) {
+      debugPrint("Erro ao verificar plano: $e");
+      return true;
     }
   }
 
@@ -92,22 +116,39 @@ class _TelaListagemState extends State<TelaListagem> {
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _abrirBuscaPersonalizada,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF045006),
-                    padding: const EdgeInsets.all(14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Icon(Icons.tune, color: Colors.white),
+
+
+                FutureBuilder<bool>(
+                  future: verificarPlanoUsuario(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const SizedBox();
+                    }
+
+                    final isFree = snapshot.data!;
+
+                    if (!isFree) {
+                      return const SizedBox(); // NÃO MOSTRA O BOTÃO
+                    }
+
+                    return ElevatedButton(
+                      onPressed: () => _abrirBuscaPersonalizada(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF045006),
+                        padding: const EdgeInsets.all(14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Icon(Icons.tune, color: Colors.white),
+                    );
+                  },
                 ),
               ],
             ),
 
-            // 🏷️ Chips de filtros ativos
             if (filtroAno != null ||
                 filtroTipo != null ||
                 filtroValorMax != null ||
@@ -141,10 +182,12 @@ class _TelaListagemState extends State<TelaListagem> {
                       Chip(
                         label: Text("Estado: $filtroEstado"),
                         deleteIcon: const Icon(Icons.close),
-                        onDeleted: () => setState(() {
-                          filtroEstado = null;
-                          filtroCidade = null;
-                        }),
+                        onDeleted: () {
+                          setState(() {
+                            filtroEstado = null;
+                            filtroCidade = null;
+                          });
+                        },
                       ),
                     if (filtroCidade?.isNotEmpty ?? false)
                       Chip(
@@ -170,7 +213,10 @@ class _TelaListagemState extends State<TelaListagem> {
 
                   if (snapshot.hasError) {
                     return const Center(
-                      child: Text("Erro ao carregar itens.", style: TextStyle(color: Colors.red)),
+                      child: Text(
+                        "Erro ao carregar itens.",
+                        style: TextStyle(color: Colors.red),
+                      ),
                     );
                   }
 
@@ -216,6 +262,7 @@ class _TelaListagemState extends State<TelaListagem> {
                     itemCount: itensFiltrados.length,
                     itemBuilder: (context, index) {
                       final item = itensFiltrados[index];
+
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -290,7 +337,6 @@ class _TelaListagemState extends State<TelaListagem> {
     );
   }
 
-  // 🧩 Modal de busca personalizada
   void _abrirBuscaPersonalizada() {
     String? anoTemp = filtroAno;
     String? tipoTemp = filtroTipo;
@@ -306,127 +352,140 @@ class _TelaListagemState extends State<TelaListagem> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const Text(
-                  "Filtros personalizados",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 24),
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const Text(
+                      "Filtros personalizados",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 24),
 
-                // Ano
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: "Ano",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => anoTemp = v,
-                  controller: TextEditingController(text: anoTemp),
-                ),
-                const SizedBox(height: 20),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: "Ano",
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (v) => anoTemp = v,
+                      controller: TextEditingController(text: anoTemp),
+                    ),
 
-                // Tipo
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: "Tipo de Transação",
-                    border: OutlineInputBorder(),
-                  ),
-                  value: tipoTemp,
-                  items: const [
-                    DropdownMenuItem(value: "venda", child: Text("Venda")),
-                    DropdownMenuItem(value: "aluga", child: Text("Aluga")),
-                    DropdownMenuItem(value: "troca", child: Text("Troca")),
-                  ],
-                  onChanged: (v) => tipoTemp = v,
-                ),
-                const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                // Valor máximo
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: "Valor máximo (R\$)",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => valorTemp = double.tryParse(v),
-                  controller: TextEditingController(
-                      text: valorTemp != null ? valorTemp.toString() : ""),
-                ),
-                const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: "Tipo de Transação",
+                        border: OutlineInputBorder(),
+                      ),
+                      value: tipoTemp,
+                      items: const [
+                        DropdownMenuItem(value: "venda", child: Text("Venda")),
+                        DropdownMenuItem(value: "aluga", child: Text("Aluga")),
+                        DropdownMenuItem(value: "troca", child: Text("Troca")),
+                      ],
+                      onChanged: (v) {
+                        setStateModal(() => tipoTemp = v);
+                      },
+                    ),
 
-                // Estado
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: "Estado",
-                    border: OutlineInputBorder(),
-                  ),
-                  value: estadoTemp,
-                  items: estados
-                      .map((e) => DropdownMenuItem(
-                            value: e['sigla'] as String,
-                            child: Text(e['nome']),
-                          ))
-                      .toList(),
-                  onChanged: (v) async {
-                    estadoTemp = v;
-                    cidadeTemp = null;
-                    if (v != null) {
-                      await _carregarCidades(v);
-                    }
-                  },
-                ),
-                const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                // Cidade
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: "Cidade",
-                    border: OutlineInputBorder(),
-                  ),
-                  value: cidadeTemp,
-                  items: cidades
-                      .map((c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c),
-                          ))
-                      .toList(),
-                  onChanged: (v) => cidadeTemp = v,
-                ),
-                const SizedBox(height: 30),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: "Valor máximo (R\$)",
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (v) => valorTemp = double.tryParse(v),
+                      controller: TextEditingController(
+                          text: valorTemp != null ? valorTemp.toString() : ""),
+                    ),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        filtroAno = anoTemp;
-                        filtroTipo = tipoTemp;
-                        filtroValorMax = valorTemp;
-                        filtroEstado = estadoTemp;
-                        filtroCidade = cidadeTemp;
-                      });
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF045006),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 20),
+
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: "Estado",
+                        border: OutlineInputBorder(),
+                      ),
+                      value: estadoTemp,
+                      items: estados
+                          .map((e) => DropdownMenuItem(
+                                value: e['sigla'] as String,
+                                child: Text(e['nome']),
+                              ))
+                          .toList(),
+                      onChanged: (v) async {
+                        setStateModal(() {
+                          estadoTemp = v;
+                          cidadeTemp = null;
+                          cidades = [];
+                        });
+
+                        if (v != null) {
+                          final lista = await _ibgeController.buscarCidades(v);
+                          setStateModal(() {
+                            cidades = lista;
+                          });
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: "Cidade",
+                        border: OutlineInputBorder(),
+                      ),
+                      value: cidadeTemp,
+                      items: cidades
+                          .map((c) =>
+                              DropdownMenuItem(value: c, child: Text(c)))
+                          .toList(),
+                      onChanged:
+                          cidades.isEmpty ? null : (v) => setStateModal(() => cidadeTemp = v),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            filtroAno = anoTemp;
+                            filtroTipo = tipoTemp;
+                            filtroValorMax = valorTemp;
+                            filtroEstado = estadoTemp;
+                            filtroCidade = cidadeTemp;
+                          });
+
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF045006),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Aplicar filtros",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      "Aplicar filtros",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -434,6 +493,7 @@ class _TelaListagemState extends State<TelaListagem> {
 
   Widget _buildItemImage(dynamic imagemData) {
     const double tamanho = 90;
+
     if (imagemData == null || imagemData.toString().isEmpty) {
       return Container(
         width: tamanho,
@@ -442,12 +502,16 @@ class _TelaListagemState extends State<TelaListagem> {
         child: const Icon(Icons.image_not_supported, color: Colors.white),
       );
     }
+
     if (imagemData.toString().startsWith('http')) {
-      return Image.network(imagemData, width: tamanho, height: tamanho, fit: BoxFit.cover);
+      return Image.network(imagemData,
+          width: tamanho, height: tamanho, fit: BoxFit.cover);
     }
+
     try {
       final decodedBytes = base64Decode(imagemData);
-      return Image.memory(decodedBytes, width: tamanho, height: tamanho, fit: BoxFit.cover);
+      return Image.memory(decodedBytes,
+          width: tamanho, height: tamanho, fit: BoxFit.cover);
     } catch (e) {
       return Container(
         width: tamanho,
