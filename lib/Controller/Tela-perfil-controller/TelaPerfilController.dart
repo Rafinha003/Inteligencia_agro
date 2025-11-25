@@ -292,4 +292,17 @@ Future<List<Map<String, dynamic>>> obterPropostasEnviadas() async {
       rethrow;
     }
   }
+
+  Future<void> excluirItem(String itemId) async {
+  try {
+    User? user = _auth.currentUser;
+    if (user == null) throw Exception("Usuário não logado");
+
+    await _firestore.collection("itens").doc(itemId).delete();
+  } catch (e) {
+    print("Erro ao excluir item: $e");
+    rethrow;
+  }
+}
+
 }

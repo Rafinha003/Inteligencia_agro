@@ -114,8 +114,7 @@ Future<List<Map<String, dynamic>>> obterTodosItens() async {
   }
 }
 
-
-    Future<void> enviarProposta({
+   Future<void> enviarProposta({
     required String uidItem,
     required String uidVendedor,
   }) async {
