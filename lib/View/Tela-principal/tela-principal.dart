@@ -15,7 +15,7 @@ class TelaPrincipal extends StatefulWidget {
 
 class _TelaPrincipalState extends State<TelaPrincipal> {
   int _indiceSelecionado = 0;
-  String _planoUsuario = "Gratuito"; // padrão caso não carregue
+  String _planoUsuario = "Gratuito";
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -25,12 +25,12 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
     _carregarPlanoUsuario();
   }
 
-  // Busca o plano do usuário no Firestore
   Future<void> _carregarPlanoUsuario() async {
     User? user = _auth.currentUser;
     if (user == null) return;
 
-    DocumentSnapshot doc = await _firestore.collection("Planos").doc(user.uid).get();
+    DocumentSnapshot doc =
+        await _firestore.collection("Planos").doc(user.uid).get();
 
     if (doc.exists) {
       setState(() {
@@ -39,7 +39,6 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
     }
   }
 
-  // Gera a lista de telas dinamicamente
   List<Widget> get _telas {
     List<Widget> telas = [
       const TelaListagem(),
@@ -47,7 +46,6 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
       const TelaPerfil(),
     ];
 
-    // Adiciona histórico de transação apenas para planos pagos
     if (_planoUsuario != "Gratuito") {
       telas.insert(2, const TelaHistoricoTransacao());
     }
@@ -55,7 +53,6 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
     return telas;
   }
 
-  // Gera os ícones do bottomNavigationBar dinamicamente
   List<IconData> get _icones {
     List<IconData> icones = [
       Icons.home,
@@ -113,28 +110,31 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
+                      // ✅ BOLINHA DIRETAMENTE ATRÁS DO ÍCONE (CENTRALIZADA)
                       if (isSelected)
-                        Positioned(
-                          top: -35,
+                        Align(
+                          alignment: Alignment.center,
                           child: Container(
-                            width: 90,
-                            height: 90,
+                            width: 55, // menor e elegante
+                            height: 55,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6CCF77).withOpacity(0.5),
+                              color: const Color(0xFF6CCF77).withOpacity(0.35),
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF6CCF77).withOpacity(0.4),
-                                  blurRadius: 20,
+                                  color: const Color(0xFF6CCF77)
+                                      .withOpacity(0.3),
+                                  blurRadius: 12,
                                   spreadRadius: 3,
                                 ),
                               ],
                             ),
                           ),
                         ),
+
                       AnimatedScale(
                         duration: const Duration(milliseconds: 250),
-                        scale: isSelected ? 1.5 : 1.0,
+                        scale: isSelected ? 1.35 : 1.0,
                         child: Icon(
                           _icones[index],
                           color: Colors.white,

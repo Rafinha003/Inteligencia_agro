@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class TelaListagemController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -20,7 +21,7 @@ Future<List<Map<String, dynamic>>> obterTodosItens() async {
         'nome': data['nome'] ?? '',
         'ano': data['ano'] ?? '',
         'tipoTransacao': data['tipoTransacao'] ?? '',
-        'valor': data['valor'] ?? '',
+        'valor': formatarValor(data['valor']?.toString() ?? ''),
         'imagem': data['imagem'] ?? '',
         'estado': data['estado'] ?? '',
         'cidade': data['cidade'] ?? '',
@@ -62,15 +63,22 @@ Future<List<Map<String, dynamic>>> obterTodosItens() async {
 
 
   Future<Map<String, dynamic>?> obterItemPorId(String itemId) async {
-    try {
-      final doc = await _firestore.collection('itens').doc(itemId).get();
-      if (doc.exists) return doc.data();
-      return null;
-    } catch (e) {
-      print('Erro ao buscar item por ID: $e');
-      return null;
-    }
+  try {
+    final doc = await _firestore.collection('itens').doc(itemId).get();
+
+    if (!doc.exists) return null;
+
+    final data = doc.data() as Map<String, dynamic>;
+
+    data['valor'] = formatarValor(data['valor']?.toString() ?? '');
+
+    return data;
+  } catch (e) {
+    print('Erro ao buscar item por ID: $e');
+    return null;
   }
+}
+
 
 
   Future<Map<String, dynamic>?> obterUsuarioPorUid(String uidUsuario) async {
@@ -133,5 +141,37 @@ Future<List<Map<String, dynamic>>> obterTodosItens() async {
       rethrow;
     }
   }
+
+  String formatarValor(String valorOriginal) {
+  if (valorOriginal.isEmpty) return "R\$ 0,00";
+
+  String somenteNumeros = valorOriginal.replaceAll(RegExp(r'[^0-9]'), '');
+
+  if (somenteNumeros.isEmpty) return "R\$ 0,00";
+
+  double valorDouble;
+
+  if (somenteNumeros.length == 2 && !somenteNumeros.startsWith('0')) {
+    valorDouble = double.parse(somenteNumeros).toDouble();
+  }
+
+  else if (somenteNumeros.length == 3 && somenteNumeros.startsWith('0')) {
+    String reais = "0";
+    String centavos = somenteNumeros.substring(1);
+    valorDouble = double.parse("$reais.$centavos");
+  }
+
+  else if (somenteNumeros.length <= 2) {
+    valorDouble = double.parse(somenteNumeros) / 100;
+  } else {
+    String reais = somenteNumeros.substring(0, somenteNumeros.length - 2);
+    String centavos = somenteNumeros.substring(somenteNumeros.length - 2);
+    valorDouble = double.parse("$reais.$centavos");
+  }
+
+  final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  return formatter.format(valorDouble);
+}
+
 }
   

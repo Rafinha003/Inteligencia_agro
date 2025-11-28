@@ -305,7 +305,14 @@ class _TelaVerMeusItensState extends State<TelaVerMeusItens> {
             setModalState(() {});
           }
 
-          if (estados.isEmpty) carregarEstados();
+          if (estados.isEmpty) {
+  carregarEstados().then((_) {
+    if (estadoSelecionado != null) {
+      carregarCidades(estadoSelecionado!);
+    }
+  });
+}
+
 
           return Padding(
             padding: EdgeInsets.only(

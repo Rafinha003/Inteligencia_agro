@@ -3,12 +3,12 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class TelaPerfilController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // 🔹 Obter dados do usuário logado
   Future<Map<String, dynamic>?> obterUsuario() async {
     User? user = _auth.currentUser;
     if (user == null) return null;
@@ -21,7 +21,6 @@ class TelaPerfilController {
     }
   }
 
-  // 🔹 Atualizar a descrição do perfil
   Future<void> atualizarDescricao(String descricao) async {
     User? user = _auth.currentUser;
     if (user == null) return;
@@ -31,7 +30,6 @@ class TelaPerfilController {
     });
   }
 
-  // 🔹 Atualizar a foto de perfil
   Future<void> atualizarFotoPerfil(String base64Image) async {
     try {
       User? user = _auth.currentUser;
@@ -46,7 +44,6 @@ class TelaPerfilController {
     }
   }
 
-  // 🔹 Obter tipos de transação
   Future<List<String>> obterTipoTransacao() async {
     try {
       QuerySnapshot snapshot = await _firestore.collection('TipoTransacao').get();
@@ -116,10 +113,8 @@ Future<void> salvarItem({
     final bool isEdicao = itemId != null;
 
     if (!isEdicao && quantidadeMes >= limite) {
-      throw Exception(
-        "Você atingiu o limite do seu plano ($tipoPlano). "
-        "Itens cadastrados este mês: $quantidadeMes / $limite",
-      );
+      throw "Você atingiu o limite do seu plano ($tipoPlano). "
+      "Itens cadastrados este mês: $quantidadeMes / $limite";
     }
 
     final data = {
@@ -142,10 +137,10 @@ Future<void> salvarItem({
     } else {
       await _firestore.collection('itens').doc(itemId).update(data);
     }
-  } catch (e) {
-    print("Erro ao salvar item: $e");
-    rethrow;
-  }
+  }  catch (e) {
+  throw e.toString(); // não vira Exception
+}
+
 }
 
 
@@ -205,7 +200,7 @@ Future<List<Map<String, dynamic>>> obterPropostasEnviadas() async {
         'descricao': data['descricao'] ?? '',
         'tipoTransacao': data['tipoTransacao'] ?? '',
         'tipoProduto': data['tipoProduto'] ?? '',
-        'valor': data['valor'] ?? '',
+        'valor': formatarValor(data['valor']?.toString() ?? ''),
         'quantidadeDias': data['quantidadeDias'] ?? '',
         'imagem': data['imagem'] ?? '',
         'estado': data['estado'] ?? '', 
@@ -217,6 +212,38 @@ Future<List<Map<String, dynamic>>> obterPropostasEnviadas() async {
     return [];
   }
 }
+
+String formatarValor(String valorOriginal) {
+  if (valorOriginal.isEmpty) return "R\$ 0,00";
+
+  String somenteNumeros = valorOriginal.replaceAll(RegExp(r'[^0-9]'), '');
+
+  if (somenteNumeros.isEmpty) return "R\$ 0,00";
+
+  double valorDouble;
+
+  if (somenteNumeros.length == 2 && !somenteNumeros.startsWith('0')) {
+    valorDouble = double.parse(somenteNumeros).toDouble();
+  }
+  
+  else if (somenteNumeros.length == 3 && somenteNumeros.startsWith('0')) {
+    String reais = "0";
+    String centavos = somenteNumeros.substring(1);
+    valorDouble = double.parse("$reais.$centavos");
+  }
+  
+  else if (somenteNumeros.length <= 2) {
+    valorDouble = double.parse(somenteNumeros) / 100;
+  } else {
+    String reais = somenteNumeros.substring(0, somenteNumeros.length - 2);
+    String centavos = somenteNumeros.substring(somenteNumeros.length - 2);
+    valorDouble = double.parse("$reais.$centavos");
+  }
+
+  final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  return formatter.format(valorDouble);
+}
+
 
  
   Future<String> converterImagemParaBase64(Uint8List bytes) async {
