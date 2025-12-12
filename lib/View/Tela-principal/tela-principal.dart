@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:inteligencia_agro/View/Tela-chat/chat.dart';
-import 'package:inteligencia_agro/View/tela-historico-transacao/tela-historico-transacao.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-perfil.dart';
+import 'package:inteligencia_agro/View/tela-historico-transacao/tela-historico-transacao.dart';
 
 class TelaPrincipal extends StatefulWidget {
   const TelaPrincipal({Key? key}) : super(key: key);
@@ -15,57 +13,20 @@ class TelaPrincipal extends StatefulWidget {
 
 class _TelaPrincipalState extends State<TelaPrincipal> {
   int _indiceSelecionado = 0;
-  String _planoUsuario = "Gratuito";
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  @override
-  void initState() {
-    super.initState();
-    _carregarPlanoUsuario();
-  }
+  List<Widget> get _telas => const [
+        TelaListagem(),
+        TelaChat(),
+        TelaHistoricoTransacao(),
+        TelaPerfil(),
+      ];
 
-  Future<void> _carregarPlanoUsuario() async {
-    User? user = _auth.currentUser;
-    if (user == null) return;
-
-    DocumentSnapshot doc =
-        await _firestore.collection("Planos").doc(user.uid).get();
-
-    if (doc.exists) {
-      setState(() {
-        _planoUsuario = doc.get("plano") ?? "Gratuito";
-      });
-    }
-  }
-
-  List<Widget> get _telas {
-    List<Widget> telas = [
-      const TelaListagem(),
-      const TelaChat(),
-      const TelaPerfil(),
-    ];
-
-    if (_planoUsuario != "Gratuito") {
-      telas.insert(2, const TelaHistoricoTransacao());
-    }
-
-    return telas;
-  }
-
-  List<IconData> get _icones {
-    List<IconData> icones = [
-      Icons.home,
-      Icons.chat,
-      Icons.person,
-    ];
-
-    if (_planoUsuario != "Gratuito") {
-      icones.insert(2, Icons.attach_money);
-    }
-
-    return icones;
-  }
+  List<IconData> get _icones => const [
+        Icons.home,
+        Icons.chat,
+        Icons.attach_money,
+        Icons.person,
+      ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -110,12 +71,11 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
-                      // ✅ BOLINHA DIRETAMENTE ATRÁS DO ÍCONE (CENTRALIZADA)
                       if (isSelected)
                         Align(
                           alignment: Alignment.center,
                           child: Container(
-                            width: 55, // menor e elegante
+                            width: 55,
                             height: 55,
                             decoration: BoxDecoration(
                               color: const Color(0xFF6CCF77).withOpacity(0.35),

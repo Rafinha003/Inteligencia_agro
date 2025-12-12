@@ -7,7 +7,6 @@ import 'package:image/image.dart' as img;
 import 'package:inteligencia_agro/View/tela-perfil/tela-exibir-propostas/tela-exibir-propostas.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-ver-meus-itens/tela-ver-meus-itens.dart';
 
-
 class TelaPerfil extends StatefulWidget {
   const TelaPerfil({Key? key}) : super(key: key);
 
@@ -42,7 +41,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
           estado = dados['endereco'][0]['estado'] ?? '';
         }
         _descricaoController.text = dados['descricao'] ?? '';
-        fotoPerfilBase64 = dados['fotoPerfil']; 
+        fotoPerfilBase64 = dados['fotoPerfil'];
       });
     }
   }
@@ -69,16 +68,15 @@ class _TelaPerfilState extends State<TelaPerfil> {
     if (imagemSelecionada != null) {
       Uint8List bytes = await imagemSelecionada.readAsBytes();
 
-      // Redimensiona a imagem para <= 1MB
       img.Image? imagemDecode = img.decodeImage(bytes);
       if (imagemDecode != null) {
-        // Mantém proporção e redimensiona para 300px de largura (ou altura equivalente)
         img.Image imagemRedimensionada = img.copyResize(imagemDecode, width: 300);
-        Uint8List bytesRedimensionados = Uint8List.fromList(img.encodeJpg(imagemRedimensionada, quality: 85));
+        Uint8List bytesRedimensionados = Uint8List.fromList(
+          img.encodeJpg(imagemRedimensionada, quality: 85),
+        );
 
         String base64Image = base64Encode(bytesRedimensionados);
 
-        // Salva no Firestore usando o controller
         await _controller.atualizarFotoPerfil(base64Image);
 
         setState(() {
@@ -108,7 +106,6 @@ class _TelaPerfilState extends State<TelaPerfil> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 🔹 Perfil com foto, nome e cidade
             Row(
               children: [
                 GestureDetector(
@@ -149,7 +146,6 @@ class _TelaPerfilState extends State<TelaPerfil> {
             ),
             const SizedBox(height: 24),
 
-            // 🔹 Descrição
             TextFormField(
               controller: _descricaoController,
               maxLines: 3,
@@ -161,12 +157,11 @@ class _TelaPerfilState extends State<TelaPerfil> {
               ),
               onChanged: (value) {
                 setState(() {
-                  _mostrarBotaoSalvar = true; // mostra botão ao digitar
+                  _mostrarBotaoSalvar = true;
                 });
               },
             ),
 
-            // 🔹 Botão Salvar
             if (_mostrarBotaoSalvar) ...[
               const SizedBox(height: 12),
               SizedBox(
@@ -196,26 +191,22 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
             Column(
               children: [
-                _botaoAcao("Upgrade de Plano", true, () {
-                  Navigator.pushReplacementNamed(context, '/tela-escolher-plano');
-                }),
-                const SizedBox(height: 12),
                 _botaoAcao("Ver meus itens", true, () {
-                     Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TelaVerMeusItens(),
-                                  ),
-                                );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TelaVerMeusItens(),
+                    ),
+                  );
                 }),
                 const SizedBox(height: 12),
                 _botaoAcao("Ver propostas", false, () {
-                   Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TelaExibirProposta(),
-                                  ),
-                                );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TelaExibirProposta(),
+                    ),
+                  );
                 }),
               ],
             ),

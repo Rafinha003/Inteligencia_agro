@@ -270,7 +270,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
       }
 
       mostrarNotificacaoTela(context: context, texto: "Cadastro realizado com sucesso!", isErro: false);
-      Navigator.pushNamedAndRemoveUntil(context, '/tela-escolher-plano', (route) => false);
+      Navigator.pushNamedAndRemoveUntil(context, '/tela-login', (route) => false);
     }
   }
 

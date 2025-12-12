@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:inteligencia_agro/Controller/tela-listagem/TelaListagemController.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem-detalhe/tela-listagem-detalhe.dart';
 import 'package:inteligencia_agro/Controller/ibge/IbgeController.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class TelaListagem extends StatefulWidget {
   const TelaListagem({Key? key}) : super(key: key);
@@ -39,7 +38,11 @@ class _TelaListagemState extends State<TelaListagem> {
       final lista = await _ibgeController.buscarEstados();
       setState(() => estados = lista);
     } catch (e) {
-      debugPrint("Erro ao carregar estados: $e");
+      mostrarNotificacaoTela(
+        context: context,
+        texto: "Erro ao carregar estados: $e",
+        isErro: true,
+      );
     }
   }
 
@@ -48,29 +51,11 @@ class _TelaListagemState extends State<TelaListagem> {
       final lista = await _ibgeController.buscarCidades(uf);
       setState(() => cidades = lista);
     } catch (e) {
-      debugPrint("Erro ao carregar cidades: $e");
-    }
-  }
-
-  Future<bool> verificarPlanoUsuario() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) return true;
-
-      final doc = await FirebaseFirestore.instance
-          .collection("Planos")
-          .doc(user.uid)
-          .get();
-
-      if (!doc.exists) return true;
-
-      final tipoPlano = doc.data()?["plano"] ?? "Gratuito";
-
-      return tipoPlano != "Gratuito";
-    } catch (e) {
-      debugPrint("Erro ao verificar plano: $e");
-      return true;
+      mostrarNotificacaoTela(
+        context: context,
+        texto: "Erro ao carregar cidade: $e",
+        isErro: true,
+      );
     }
   }
 
@@ -106,7 +91,8 @@ class _TelaListagemState extends State<TelaListagem> {
                     },
                     decoration: InputDecoration(
                       hintText: "Pesquisar item...",
-                      prefixIcon: const Icon(Icons.search, color: Color(0xFF045006)),
+                      prefixIcon:
+                          const Icon(Icons.search, color: Color(0xFF045006)),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -118,33 +104,16 @@ class _TelaListagemState extends State<TelaListagem> {
                 ),
 
                 const SizedBox(width: 10),
-
-
-                FutureBuilder<bool>(
-                  future: verificarPlanoUsuario(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const SizedBox();
-                    }
-
-                    final isFree = snapshot.data!;
-
-                    if (!isFree) {
-                      return const SizedBox(); // NÃO MOSTRA O BOTÃO
-                    }
-
-                    return ElevatedButton(
-                      onPressed: () => _abrirBuscaPersonalizada(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF045006),
-                        padding: const EdgeInsets.all(14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Icon(Icons.tune, color: Colors.white),
-                    );
-                  },
+                ElevatedButton(
+                  onPressed: () => _abrirBuscaPersonalizada(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF045006),
+                    padding: const EdgeInsets.all(14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Icon(Icons.tune, color: Colors.white),
                 ),
               ],
             ),
@@ -174,7 +143,8 @@ class _TelaListagemState extends State<TelaListagem> {
                       ),
                     if (filtroValorMax != null)
                       Chip(
-                        label: Text("Valor ≤ R\$ ${filtroValorMax!.toStringAsFixed(2)}"),
+                        label: Text(
+                            "Valor ≤ R\$ ${filtroValorMax!.toStringAsFixed(2)}"),
                         deleteIcon: const Icon(Icons.close),
                         onDeleted: () => setState(() => filtroValorMax = null),
                       ),
@@ -223,8 +193,10 @@ class _TelaListagemState extends State<TelaListagem> {
                   final itens = snapshot.data ?? [];
 
                   final itensFiltrados = itens.where((item) {
-                    final nome = (item['nome'] ?? '').toString().toLowerCase();
-                    final tipo = (item['tipoTransacao'] ?? '').toString().toLowerCase();
+                    final nome =
+                        (item['nome'] ?? '').toString().toLowerCase();
+                    final tipo =
+                        (item['tipoTransacao'] ?? '').toString().toLowerCase();
                     final ano = (item['ano'] ?? '').toString();
                     final estado = (item['estado'] ?? '').toString();
                     final cidade = (item['cidade'] ?? '').toString();
@@ -235,11 +207,25 @@ class _TelaListagemState extends State<TelaListagem> {
                         : null;
 
                     bool correspondePesquisa = nome.contains(filtro);
-                    bool correspondeTipo = filtroTipo == null || filtroTipo!.isEmpty || tipo == filtroTipo!.toLowerCase();
-                    bool correspondeAno = filtroAno == null || filtroAno!.isEmpty || ano == filtroAno;
-                    bool correspondeValor = filtroValorMax == null ? true : (valor != null && valor <= filtroValorMax!);
-                    bool correspondeEstado = filtroEstado == null || filtroEstado!.isEmpty || estado == filtroEstado;
-                    bool correspondeCidade = filtroCidade == null || filtroCidade!.isEmpty || cidade == filtroCidade;
+                    bool correspondeTipo =
+                        filtroTipo == null ||
+                            filtroTipo!.isEmpty ||
+                            tipo == filtroTipo!.toLowerCase();
+                    bool correspondeAno =
+                        filtroAno == null ||
+                            filtroAno!.isEmpty ||
+                            ano == filtroAno;
+                    bool correspondeValor = filtroValorMax == null
+                        ? true
+                        : (valor != null && valor <= filtroValorMax!);
+                    bool correspondeEstado =
+                        filtroEstado == null ||
+                            filtroEstado!.isEmpty ||
+                            estado == filtroEstado;
+                    bool correspondeCidade =
+                        filtroCidade == null ||
+                            filtroCidade!.isEmpty ||
+                            cidade == filtroCidade;
 
                     return correspondePesquisa &&
                         correspondeTipo &&
@@ -297,7 +283,8 @@ class _TelaListagemState extends State<TelaListagem> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         item['nome'] ?? "Sem nome",
@@ -309,7 +296,8 @@ class _TelaListagemState extends State<TelaListagem> {
                                       ),
                                       const SizedBox(height: 6),
                                       Text("Ano: ${item['ano'] ?? '-'}"),
-                                      Text("Tipo: ${item['tipoTransacao'] ?? '-'}"),
+                                      Text(
+                                          "Tipo: ${item['tipoTransacao'] ?? '-'}"),
                                       if (item['tipoTransacao'] != 'Troca')
                                         Text(
                                           "Valor: R\$ ${item['valor'] ?? '-'}",
@@ -361,7 +349,8 @@ class _TelaListagemState extends State<TelaListagem> {
                   children: [
                     const Text(
                       "Filtros personalizados",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 24),
 
@@ -384,9 +373,12 @@ class _TelaListagemState extends State<TelaListagem> {
                       ),
                       value: tipoTemp,
                       items: const [
-                        DropdownMenuItem(value: "venda", child: Text("Venda")),
-                        DropdownMenuItem(value: "aluga", child: Text("Aluga")),
-                        DropdownMenuItem(value: "troca", child: Text("Troca")),
+                        DropdownMenuItem(
+                            value: "venda", child: Text("Venda")),
+                        DropdownMenuItem(
+                            value: "aluga", child: Text("Aluga")),
+                        DropdownMenuItem(
+                            value: "troca", child: Text("Troca")),
                       ],
                       onChanged: (v) {
                         setStateModal(() => tipoTemp = v);
@@ -403,7 +395,9 @@ class _TelaListagemState extends State<TelaListagem> {
                       keyboardType: TextInputType.number,
                       onChanged: (v) => valorTemp = double.tryParse(v),
                       controller: TextEditingController(
-                          text: valorTemp != null ? valorTemp.toString() : ""),
+                        text:
+                            valorTemp != null ? valorTemp.toString() : "",
+                      ),
                     ),
 
                     const SizedBox(height: 20),
@@ -415,10 +409,12 @@ class _TelaListagemState extends State<TelaListagem> {
                       ),
                       value: estadoTemp,
                       items: estados
-                          .map((e) => DropdownMenuItem(
-                                value: e['sigla'] as String,
-                                child: Text(e['nome']),
-                              ))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['sigla'] as String,
+                              child: Text(e['nome']),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) async {
                         setStateModal(() {
@@ -428,7 +424,8 @@ class _TelaListagemState extends State<TelaListagem> {
                         });
 
                         if (v != null) {
-                          final lista = await _ibgeController.buscarCidades(v);
+                          final lista =
+                              await _ibgeController.buscarCidades(v);
                           setStateModal(() {
                             cidades = lista;
                           });
@@ -448,8 +445,9 @@ class _TelaListagemState extends State<TelaListagem> {
                           .map((c) =>
                               DropdownMenuItem(value: c, child: Text(c)))
                           .toList(),
-                      onChanged:
-                          cidades.isEmpty ? null : (v) => setStateModal(() => cidadeTemp = v),
+                      onChanged: cidades.isEmpty
+                          ? null
+                          : (v) => setStateModal(() => cidadeTemp = v),
                     ),
 
                     const SizedBox(height: 30),
@@ -477,7 +475,8 @@ class _TelaListagemState extends State<TelaListagem> {
                         ),
                         child: const Text(
                           "Aplicar filtros",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style:
+                              TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
                     ),

@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:inteligencia_agro/View/Tela-escolha-plano/tela-escolha-plano.dart';
 import 'package:inteligencia_agro/View/Tela-principal/tela-principal.dart';
 import 'package:inteligencia_agro/View/tela-cadastro/tela-cadastro.dart';
 import 'package:inteligencia_agro/View/tela-historico-transacao/tela-historico-transacao.dart';
@@ -35,7 +34,6 @@ class MyApp extends StatelessWidget {
     '/tela-login': (context) => TelaLogin(),
     '/tela-cadastro': (context) => TelaCadastro(),
     '/tela-recuperar-senha': (context) => TelaRecuperarSenha(),
-    '/tela-escolher-plano': (context) => TelaEscolhaPlano(),
     '/tela-principal': (context) => TelaPrincipal(),
     '/tela-perfil': (context) => TelaPerfil(),
     '/tela-ver-meus-itens': (context) => TelaVerMeusItens(),
