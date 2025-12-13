@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
-import 'package:inteligencia_agro/View/Tela-principal/tela-principal.dart';
-import 'package:inteligencia_agro/common/notificacao_tela.dart';
+import 'package:inteligencia_agro/Controller/autenticacao/Tela-login-controller.dart';
+import 'package:inteligencia_agro/Model/LoginModel.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
@@ -13,10 +12,10 @@ class TelaLogin extends StatefulWidget {
 class _TelaLoginState extends State<TelaLogin> {
   final _formKey = GlobalKey<FormState>();
 
-  TextEditingController _valorEmail = TextEditingController();
-  TextEditingController _valorSenha = TextEditingController();
+  final TextEditingController _valorEmail = TextEditingController();
+  final TextEditingController _valorSenha = TextEditingController();
 
-  AutenticacaoController _autenticacaoController = AutenticacaoController();
+  final LoginController _controller = LoginController();
 
   @override
   Widget build(BuildContext context) {
@@ -48,34 +47,34 @@ class _TelaLoginState extends State<TelaLogin> {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 32),
+
                 TextFormField(
                   controller: _valorEmail,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (String? value) {
+                  validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Digite o e-mail";
                     }
                     if (!value.contains("@")) {
                       return "O e-mail é inválido";
                     }
-
                     return null;
                   },
                 ),
+
                 SizedBox(height: 16),
+
                 TextFormField(
                   controller: _valorSenha,
                   decoration: InputDecoration(
                     labelText: 'Senha',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     prefixIcon: Icon(Icons.lock),
                   ),
                   obscureText: true,
@@ -86,23 +85,35 @@ class _TelaLoginState extends State<TelaLogin> {
                     return null;
                   },
                 ),
+
                 SizedBox(height: 8),
+
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      btnEsqueceuSenha(context);
-                    },
+                    onPressed: () =>
+                        _controller.irParaRecuperarSenha(context),
                     child: Text(
                       'Esqueceu a senha?',
                       style: TextStyle(color: Color(0xFF00897B)),
                     ),
                   ),
                 ),
+
                 SizedBox(height: 16),
+
                 ElevatedButton(
                   onPressed: () {
-                    btnLogin(context);
+                    LoginModel login = LoginModel(
+                      email: _valorEmail.text.trim(),
+                      senha: _valorSenha.text.trim(),
+                    );
+
+                    _controller.realizarLogin(
+                      context: context,
+                      login: login,
+                      formKey: _formKey,
+                    );
                   },
                   child: Text('Login', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
@@ -110,11 +121,11 @@ class _TelaLoginState extends State<TelaLogin> {
                     backgroundColor: const Color(0xFF045006),
                   ),
                 ),
+
                 SizedBox(height: 8),
+
                 TextButton(
-                  onPressed: () {
-                    btnCriarConta(context);
-                  },
+                  onPressed: () => _controller.irParaCriarConta(context),
                   child: Text(
                     'Criar conta',
                     style: TextStyle(color: Colors.white),
@@ -130,39 +141,5 @@ class _TelaLoginState extends State<TelaLogin> {
         ),
       ),
     );
-  }
-
-  btnLogin(BuildContext context) {
-    String email = _valorEmail.text;
-    String senha = _valorSenha.text;
-
-    if (_formKey.currentState!.validate()) {
-      _autenticacaoController.LogarUsuario(email: email, senha: senha).then((
-        String? erro,
-      ) {
-        if (erro != null) {
-          mostrarNotificacaoTela(context: context, texto: erro);
-        } else {
-          
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TelaPrincipal()),
-          );
-        }
-      });
-    } else {
-      mostrarNotificacaoTela(
-        context: context,
-        texto: "Há um ou mais campos inválidos.",
-      );
-    }
-  }
-
-  btnCriarConta(BuildContext context) {
-    Navigator.popAndPushNamed(context, '/tela-cadastro');
-  }
-
-  btnEsqueceuSenha(BuildContext context) {
-    Navigator.pushNamed(context, '/tela-recuperar-senha');
   }
 }

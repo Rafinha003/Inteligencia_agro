@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:inteligencia_agro/Controller/autenticacao/autenticacaoController.dart';
-import 'package:inteligencia_agro/View/tela-login/tela-login.dart';
-import 'package:inteligencia_agro/common/notificacao_tela.dart';
+import 'package:inteligencia_agro/Controller/autenticacao/tela-recuperar-senha-controller.dart';
+import 'package:inteligencia_agro/Model/RecuperarSenhaModel.dart';
 
 class TelaRecuperarSenha extends StatefulWidget {
   const TelaRecuperarSenha({super.key});
@@ -13,9 +12,15 @@ class TelaRecuperarSenha extends StatefulWidget {
 class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _emailController = TextEditingController();
+  final RecuperarSenhaModel _model = RecuperarSenhaModel();
+  final RecuperarSenhaController _controller = RecuperarSenhaController();
 
-  AutenticacaoController _autenticacaoController = AutenticacaoController();
+  @override
+  void dispose() {
+    _model.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,8 +62,9 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
+
                 TextFormField(
-                  controller: _emailController,
+                  controller: _model.emailController,
                   decoration: InputDecoration(
                     labelText: 'E-mail',
                     border: OutlineInputBorder(
@@ -66,17 +72,11 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
                     ),
                     prefixIcon: const Icon(Icons.email),
                   ),
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return "Digite o e-mail";
-                    }
-                    if (!value.contains("@")) {
-                      return "O e-mail é inválido";
-                    }
-                    return null;
-                  },
+                  validator: (_) => _model.validarEmail(),
                 ),
+
                 const SizedBox(height: 24),
+
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -88,7 +88,11 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
                       ),
                     ),
                     onPressed: () {
-                      btnEnviar();
+                      _controller.btnEnviar(
+                        context: context,
+                        formKey: _formKey,
+                        model: _model,
+                      );
                     },
                     child: const Text(
                       "Enviar",
@@ -102,22 +106,5 @@ class _TelaRecuperarSenhaState extends State<TelaRecuperarSenha> {
         ),
       ),
     );
-  }
-
-  btnEnviar() {
-    String email = _emailController.text;
-
-    _autenticacaoController.RecuperarSenha(email: email).then((String? erro) {
-      if (erro != null) {
-        mostrarNotificacaoTela(context: context, texto: erro);
-      } else {
-        mostrarNotificacaoTela(
-          context: context,
-          texto: "Email de recuperação enviado com sucesso!!",
-          isErro: false,
-        );
-        Navigator.pushNamed(context,  '/tela-login');
-      }
-    });
   }
 }
