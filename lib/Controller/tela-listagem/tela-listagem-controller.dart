@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
+import 'package:inteligencia_agro/Controller/ibge/IbgeController.dart';
+import 'package:inteligencia_agro/common/formatacao.dart';
 
-class TelaListagemControllerr {
+class TelaListagemController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final IbgeController _ibgeController = IbgeController();
 
+  //METODO FIREBASE
 Future<List<Map<String, dynamic>>> obterTodosItens() async {
   try {
     final usuarioLogado = FirebaseAuth.instance.currentUser;
@@ -60,39 +63,15 @@ Future<List<Map<String, dynamic>>> obterTodosItens() async {
   }
 }
 
-
-
-  
-  String formatarValor(String valorOriginal) {
-  if (valorOriginal.isEmpty) return "R\$ 0,00";
-
-  String somenteNumeros = valorOriginal.replaceAll(RegExp(r'[^0-9]'), '');
-
-  if (somenteNumeros.isEmpty) return "R\$ 0,00";
-
-  double valorDouble;
-
-  if (somenteNumeros.length == 2 && !somenteNumeros.startsWith('0')) {
-    valorDouble = double.parse(somenteNumeros).toDouble();
+ // METODOS API IBGE
+  Future<List<Map<String, dynamic>>> buscarEstados() async {
+    return _ibgeController.buscarEstados();
   }
 
-  else if (somenteNumeros.length == 3 && somenteNumeros.startsWith('0')) {
-    String reais = "0";
-    String centavos = somenteNumeros.substring(1);
-    valorDouble = double.parse("$reais.$centavos");
+  Future<List<String>> buscarCidades(String uf) async {
+    return _ibgeController.buscarCidades(uf);
   }
 
-  else if (somenteNumeros.length <= 2) {
-    valorDouble = double.parse(somenteNumeros) / 100;
-  } else {
-    String reais = somenteNumeros.substring(0, somenteNumeros.length - 2);
-    String centavos = somenteNumeros.substring(somenteNumeros.length - 2);
-    valorDouble = double.parse("$reais.$centavos");
-  }
-
-  final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-  return formatter.format(valorDouble);
-}
 
 }
   

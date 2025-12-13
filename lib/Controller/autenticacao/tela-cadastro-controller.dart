@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:inteligencia_agro/Controller/Ibge/ibgeController.dart';
 import 'package:inteligencia_agro/Model/CadastroModel.dart';
 
-
 class CadastroController {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -33,7 +32,7 @@ class CadastroController {
       return e.message;
     }
   }
-  
+
   Future<String?> criarUsuario({
     required String nome,
     required String email,
