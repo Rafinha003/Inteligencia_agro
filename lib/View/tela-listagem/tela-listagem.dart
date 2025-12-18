@@ -4,6 +4,7 @@ import 'package:inteligencia_agro/Controller/tela-listagem/tela-listagem-control
 import 'package:inteligencia_agro/Model/ListagemModel.dart';
 import 'package:inteligencia_agro/View/tela-listagem/tela-listagem-detalhe/tela-listagem-detalhe.dart';
 import 'package:inteligencia_agro/Controller/ibge/IbgeController.dart';
+import 'package:inteligencia_agro/View/tela-login/tela-login.dart';
 import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class TelaListagem extends StatefulWidget {
@@ -38,10 +39,10 @@ class _TelaListagemState extends State<TelaListagem> {
     try {
       final lista = await _ibgeController.buscarEstados();
       setState(() => estados = lista);
-    } catch (e) {
+    } catch (_) {
       mostrarNotificacaoTela(
         context: context,
-        texto: "Erro ao carregar estados: $e",
+        texto: "Erro ao carregar estados",
         isErro: true,
       );
     }
@@ -51,10 +52,10 @@ class _TelaListagemState extends State<TelaListagem> {
     try {
       final lista = await _ibgeController.buscarCidades(uf);
       setState(() => cidades = lista);
-    } catch (e) {
+    } catch (_) {
       mostrarNotificacaoTela(
         context: context,
-        texto: "Erro ao carregar cidade: $e",
+        texto: "Erro ao carregar cidades",
         isErro: true,
       );
     }
@@ -63,243 +64,82 @@ class _TelaListagemState extends State<TelaListagem> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        title: const Text(
-          "Listagem de Itens",
-          style: TextStyle(color: Colors.white, fontSize: 22),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF045006),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: Column(
+        children: [
+          _buildHeader(),
+          if (_temFiltrosAtivos())
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: _buildChipsFiltros(),
+              ),
+            ),
+          Expanded(child: _buildLista()),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+    );
+  }
+
+  // 🔹 HEADER PADRÃO CHAT COM BOTÃO VOLTAR
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.only(top: 56, bottom: 24),
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF045006), Color(0xFF3FAF47)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(36)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _pesquisaController,
-                    onChanged: (value) {
-                      setState(() {
-                        filtro = value.toLowerCase();
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: "Pesquisar item...",
-                      prefixIcon:
-                          const Icon(Icons.search, color: Color(0xFF045006)),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TelaLogin(),
                       ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 26,
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () => _abrirBuscaPersonalizada(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF045006),
-                    padding: const EdgeInsets.all(14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                const SizedBox(width: 8),
+                const Text(
+                  "Listagem de Itens",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: const Icon(Icons.tune, color: Colors.white),
                 ),
               ],
             ),
-            if (filtroAno != null ||
-                filtroTipo != null ||
-                filtroValorMax != null ||
-                filtroEstado != null ||
-                filtroCidade != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    if (filtroAno?.isNotEmpty ?? false)
-                      Chip(
-                        label: Text("Ano: $filtroAno"),
-                        deleteIcon: const Icon(Icons.close),
-                        onDeleted: () => setState(() => filtroAno = null),
-                      ),
-                    if (filtroTipo?.isNotEmpty ?? false)
-                      Chip(
-                        label: Text("Tipo: $filtroTipo"),
-                        deleteIcon: const Icon(Icons.close),
-                        onDeleted: () => setState(() => filtroTipo = null),
-                      ),
-                    if (filtroValorMax != null)
-                      Chip(
-                        label: Text(
-                            "Valor ≤ R\$ ${filtroValorMax!.toStringAsFixed(2)}"),
-                        deleteIcon: const Icon(Icons.close),
-                        onDeleted: () => setState(() => filtroValorMax = null),
-                      ),
-                    if (filtroEstado?.isNotEmpty ?? false)
-                      Chip(
-                        label: Text("Estado: $filtroEstado"),
-                        deleteIcon: const Icon(Icons.close),
-                        onDeleted: () {
-                          setState(() {
-                            filtroEstado = null;
-                            filtroCidade = null;
-                          });
-                        },
-                      ),
-                    if (filtroCidade?.isNotEmpty ?? false)
-                      Chip(
-                        label: Text("Cidade: $filtroCidade"),
-                        deleteIcon: const Icon(Icons.close),
-                        onDeleted: () => setState(() => filtroCidade = null),
-                      ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: FutureBuilder<List<ListagemModel>>(
-                future: _controller.obterTodosItens().then(
-                    (lista) => lista.map((e) => ListagemModel.fromMap(e)).toList()),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                          color: Color(0xFF045006)),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return const Center(
-                      child: Text(
-                        "Erro ao carregar itens.",
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    );
-                  }
-
-                  final itens = snapshot.data ?? [];
-
-                  final itensFiltrados = itens.where((item) {
-                    final nome = item.nome.toLowerCase();
-                    final tipo = item.tipoTransacao.toLowerCase();
-                    final ano = item.ano;
-                    final estado = item.estado;
-                    final cidade = item.cidade;
-                    final valor = item.valor;
-
-                    bool correspondePesquisa = nome.contains(filtro);
-                    bool correspondeTipo =
-                        filtroTipo == null || filtroTipo!.isEmpty || tipo == filtroTipo!.toLowerCase();
-                    bool correspondeAno =
-                        filtroAno == null || filtroAno!.isEmpty || ano == filtroAno;
-                    bool correspondeValor =
-                        filtroValorMax == null ? true : (valor != null && valor <= filtroValorMax!);
-                    bool correspondeEstado =
-                        filtroEstado == null || filtroEstado!.isEmpty || estado == filtroEstado;
-                    bool correspondeCidade =
-                        filtroCidade == null || filtroCidade!.isEmpty || cidade == filtroCidade;
-
-                    return correspondePesquisa &&
-                        correspondeTipo &&
-                        correspondeAno &&
-                        correspondeValor &&
-                        correspondeEstado &&
-                        correspondeCidade;
-                  }).toList();
-
-                  if (itensFiltrados.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        "Nenhum item encontrado.",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: itensFiltrados.length,
-                    itemBuilder: (context, index) {
-                      final item = itensFiltrados[index];
-
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  TelaListagemDetalhe(itemId: item.id),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: _buildItemImage(item.imagem),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.nome,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 17,
-                                          color: Color(0xFF1C1C1C),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text("Ano: ${item.ano}"),
-                                      Text("Tipo: ${item.tipoTransacao}"),
-                                      if (item.tipoTransacao != 'Troca')
-                                        Text(
-                                          "Valor: R\$ ${item.valor?.toStringAsFixed(2) ?? '-'}",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF3FAF47),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildPesquisa()),
+                const SizedBox(width: 10),
+                _buildBotaoFiltro(),
+              ],
             ),
           ],
         ),
@@ -307,6 +147,234 @@ class _TelaListagemState extends State<TelaListagem> {
     );
   }
 
+  // 🔍 PESQUISA
+  Widget _buildPesquisa() {
+    return TextField(
+      controller: _pesquisaController,
+      onChanged: (value) =>
+          setState(() => filtro = value.toLowerCase()),
+      decoration: InputDecoration(
+        hintText: "Pesquisar item...",
+        prefixIcon: const Icon(Icons.search, color: Color(0xFF045006)),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  // 🎛 BOTÃO FILTRO
+  Widget _buildBotaoFiltro() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: _abrirBuscaPersonalizada,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.tune, color: Color(0xFF045006)),
+      ),
+    );
+  }
+
+  // 📋 LISTA
+  Widget _buildLista() {
+    return FutureBuilder<List<ListagemModel>>(
+      future: _controller
+          .obterTodosItens()
+          .then((l) => l.map(ListagemModel.fromMap).toList()),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF045006)),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text(
+              "Erro ao carregar itens.",
+              style: TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        final itens = snapshot.data ?? [];
+
+        final itensFiltrados = itens.where((item) {
+          return item.nome.toLowerCase().contains(filtro) &&
+              (filtroTipo == null ||
+                  item.tipoTransacao.toLowerCase() ==
+                      filtroTipo!.toLowerCase()) &&
+              (filtroAno == null || item.ano == filtroAno) &&
+              (filtroValorMax == null ||
+                  (item.valor != null &&
+                      item.valor! <= filtroValorMax!)) &&
+              (filtroEstado == null || item.estado == filtroEstado) &&
+              (filtroCidade == null || item.cidade == filtroCidade);
+        }).toList();
+
+        if (itensFiltrados.isEmpty) {
+          return const Center(
+            child: Text(
+              "Nenhum item encontrado",
+              style: TextStyle(color: Colors.grey),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          itemCount: itensFiltrados.length,
+          itemBuilder: (_, index) =>
+              _buildItem(itensFiltrados[index]),
+        );
+      },
+    );
+  }
+
+  // 🧱 CARD ITEM
+  Widget _buildItem(ListagemModel item) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TelaListagemDetalhe(itemId: item.id),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _buildItemImage(item.imagem),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.nome,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text("Ano: ${item.ano}",
+                      style: const TextStyle(color: Colors.grey)),
+                  Text("Tipo: ${item.tipoTransacao}",
+                      style: const TextStyle(color: Colors.grey)),
+                  if (item.tipoTransacao.toLowerCase() != 'troca')
+                    Text(
+                      "R\$ ${item.valor?.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        color: Color(0xFF3FAF47),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 🖼 IMAGEM
+  Widget _buildItemImage(String? imagemData) {
+    const double size = 70;
+
+    Widget imagem;
+    if (imagemData == null || imagemData.isEmpty) {
+      imagem = const Icon(Icons.image, color: Colors.white);
+    } else if (imagemData.startsWith('http')) {
+      imagem = Image.network(imagemData, fit: BoxFit.cover);
+    } else {
+      try {
+        imagem = Image.memory(
+          base64Decode(imagemData),
+          fit: BoxFit.cover,
+        );
+      } catch (_) {
+        imagem = const Icon(Icons.broken_image, color: Colors.white);
+      }
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: Color(0xFF3FAF47),
+        borderRadius: BorderRadius.all(Radius.circular(14)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imagem,
+    );
+  }
+
+  bool _temFiltrosAtivos() =>
+      filtroAno != null ||
+      filtroTipo != null ||
+      filtroValorMax != null ||
+      filtroEstado != null ||
+      filtroCidade != null;
+
+  List<Widget> _buildChipsFiltros() {
+    return [
+      if (filtroAno != null)
+        _chip("Ano", filtroAno!, () => setState(() => filtroAno = null)),
+      if (filtroTipo != null)
+        _chip("Tipo", filtroTipo!, () => setState(() => filtroTipo = null)),
+      if (filtroValorMax != null)
+        _chip(
+          "Valor",
+          "≤ R\$ ${filtroValorMax!.toStringAsFixed(2)}",
+          () => setState(() => filtroValorMax = null),
+        ),
+      if (filtroEstado != null)
+        _chip("Estado", filtroEstado!,
+            () => setState(() => filtroEstado = null)),
+      if (filtroCidade != null)
+        _chip("Cidade", filtroCidade!,
+            () => setState(() => filtroCidade = null)),
+    ];
+  }
+
+  Widget _chip(String label, String value, VoidCallback onDelete) {
+    return Chip(
+      label: Text("$label: $value"),
+      deleteIcon: const Icon(Icons.close),
+      onDeleted: onDelete,
+      backgroundColor: Colors.green.shade50,
+      deleteIconColor: Colors.red,
+    );
+  }
+
+  // 🔽 MODAL FILTROS
   void _abrirBuscaPersonalizada() {
     String? anoTemp = filtroAno;
     String? tipoTemp = filtroTipo;
@@ -317,15 +385,19 @@ class _TelaListagemState extends State<TelaListagem> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setStateModal) {
+          builder: (context, setModal) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -335,16 +407,18 @@ class _TelaListagemState extends State<TelaListagem> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 24),
+
                     TextField(
                       decoration: const InputDecoration(
                         labelText: "Ano",
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
-                      onChanged: (v) => anoTemp = v,
                       controller: TextEditingController(text: anoTemp),
+                      onChanged: (v) => anoTemp = v,
                     ),
+
                     const SizedBox(height: 20),
+
                     DropdownButtonFormField<String>(
                       decoration: const InputDecoration(
                         labelText: "Tipo de Transação",
@@ -356,22 +430,25 @@ class _TelaListagemState extends State<TelaListagem> {
                         DropdownMenuItem(value: "aluga", child: Text("Aluga")),
                         DropdownMenuItem(value: "troca", child: Text("Troca")),
                       ],
-                      onChanged: (v) {
-                        setStateModal(() => tipoTemp = v);
-                      },
+                      onChanged: (v) => setModal(() => tipoTemp = v),
                     ),
+
                     const SizedBox(height: 20),
+
                     TextField(
+                      keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: "Valor máximo (R\$)",
+                        labelText: "Valor máximo",
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
-                      onChanged: (v) => valorTemp = double.tryParse(v),
-                      controller:
-                          TextEditingController(text: valorTemp?.toString()),
+                      controller: TextEditingController(
+                          text: valorTemp?.toString()),
+                      onChanged: (v) =>
+                          valorTemp = double.tryParse(v),
                     ),
+
                     const SizedBox(height: 20),
+
                     DropdownButtonFormField<String>(
                       decoration: const InputDecoration(
                         labelText: "Estado",
@@ -379,25 +456,28 @@ class _TelaListagemState extends State<TelaListagem> {
                       ),
                       value: estadoTemp,
                       items: estados
-                          .map((e) => DropdownMenuItem(
-                                value: e['sigla'] as String,
-                                child: Text(e['nome']),
-                              ))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e['sigla'] as String,
+                              child: Text(e['nome']),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) async {
-                        setStateModal(() {
+                        setModal(() {
                           estadoTemp = v;
                           cidadeTemp = null;
-                          cidades = [];
+                          cidades.clear();
                         });
-
                         if (v != null) {
-                          final lista = await _ibgeController.buscarCidades(v);
-                          setStateModal(() => cidades = lista);
+                          await _carregarCidades(v);
+                          setModal(() {});
                         }
                       },
                     ),
+
                     const SizedBox(height: 20),
+
                     DropdownButtonFormField<String>(
                       decoration: const InputDecoration(
                         labelText: "Cidade",
@@ -405,12 +485,18 @@ class _TelaListagemState extends State<TelaListagem> {
                       ),
                       value: cidadeTemp,
                       items: cidades
-                          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .map((c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c),
+                              ))
                           .toList(),
-                      onChanged:
-                          cidades.isEmpty ? null : (v) => setStateModal(() => cidadeTemp = v),
+                      onChanged: cidades.isEmpty
+                          ? null
+                          : (v) => setModal(() => cidadeTemp = v),
                     ),
+
                     const SizedBox(height: 30),
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -426,14 +512,16 @@ class _TelaListagemState extends State<TelaListagem> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF045006),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: const Text(
                           "Aplicar filtros",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style:
+                              TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
                     ),
@@ -445,36 +533,5 @@ class _TelaListagemState extends State<TelaListagem> {
         );
       },
     );
-  }
-
-  Widget _buildItemImage(String? imagemData) {
-    const double tamanho = 90;
-
-    if (imagemData == null || imagemData.isEmpty) {
-      return Container(
-        width: tamanho,
-        height: tamanho,
-        color: const Color(0xFF3FAF47),
-        child: const Icon(Icons.image_not_supported, color: Colors.white),
-      );
-    }
-
-    if (imagemData.startsWith('http')) {
-      return Image.network(imagemData,
-          width: tamanho, height: tamanho, fit: BoxFit.cover);
-    }
-
-    try {
-      final decodedBytes = base64Decode(imagemData);
-      return Image.memory(decodedBytes,
-          width: tamanho, height: tamanho, fit: BoxFit.cover);
-    } catch (e) {
-      return Container(
-        width: tamanho,
-        height: tamanho,
-        color: Colors.grey[300],
-        child: const Icon(Icons.broken_image, color: Colors.grey),
-      );
-    }
   }
 }

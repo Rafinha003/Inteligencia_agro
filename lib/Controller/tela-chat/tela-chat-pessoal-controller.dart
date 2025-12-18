@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class ChatController {
+class ChatPessoalController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
+ 
+ //METODOS FIREBASE
   String _gerarChatId(String uid1, String uid2) {
     final sorted = [uid1, uid2]..sort();
     return '${sorted[0]}_${sorted[1]}';
@@ -55,69 +56,12 @@ class ChatController {
       if (doc.exists) return doc.data();
       return null;
     } catch (e) {
-      print("Erro ao buscar vendedor: $e");
       return null;
     }
   }
 
-  Future<List<Map<String, dynamic>>> obterConversasUsuario() async {
-  final user = _auth.currentUser;
-  if (user == null) throw Exception("Usuário não autenticado.");
 
-  try {
-    // 🔹 Tenta buscar com ordenação — se falhar, busca sem orderBy
-    QuerySnapshot<Map<String, dynamic>> querySnapshot;
-    try {
-      querySnapshot = await _firestore
-          .collection('chats')
-          .where('usuarios', arrayContains: user.uid)
-          .orderBy('ultimaMensagemEm', descending: true)
-          .get();
-    } catch (_) {
-      querySnapshot = await _firestore
-          .collection('chats')
-          .where('usuarios', arrayContains: user.uid)
-          .get();
-    }
-
-    List<Map<String, dynamic>> conversas = [];
-
-    for (var doc in querySnapshot.docs) {
-      final data = doc.data();
-      final List usuarios = (data['usuarios'] ?? []) as List;
-
-      if (usuarios.isEmpty || !usuarios.contains(user.uid)) continue;
-
-      final outroUid = usuarios.firstWhere(
-        (uid) => uid != user.uid,
-        orElse: () => null,
-      );
-
-      if (outroUid == null) continue;
-
-      // 🔹 Busca dados do outro usuário
-      final outroDoc =
-          await _firestore.collection('Usuario').doc(outroUid).get();
-      final outroData = outroDoc.data() ?? {};
-
-      conversas.add({
-        'uidOutroUsuario': outroUid,
-        'nome': outroData['nome'] ?? 'Usuário',
-        'fotoPerfil': outroData['fotoPerfil'],
-        'ultimoTexto': data['ultimoTexto'] ?? '',
-        'ultimaMensagemEm': data['ultimaMensagemEm'],
-      });
-    }
-
-    return conversas;
-  } catch (e) {
-    print("❌ Erro ao obter conversas: $e");
-    return [];
-  }
-}
-
-
-
+//METODOS DA TELA
   String? obterUidUsuarioAtual() => _auth.currentUser?.uid;
   
 }

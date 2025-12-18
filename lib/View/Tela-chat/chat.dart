@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:inteligencia_agro/Controller/tela-chat/chatController.dart';
+import 'package:inteligencia_agro/Controller/tela-chat/tela-chat-controller.dart';
+import 'package:inteligencia_agro/Model/ChatModel.dart';
 import 'package:inteligencia_agro/View/Tela-chat/tela-chat-pessoal/chat-pessoal.dart';
 
 class TelaChat extends StatefulWidget {
@@ -19,141 +20,194 @@ class _TelaChatState extends State<TelaChat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        title: const Text(
-          "Chat",
-          style: TextStyle(color: Colors.white, fontSize: 22),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF045006),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-        automaticallyImplyLeading: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(child: _buildListaConversas()),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+    );
+  }
+
+  // 🔹 HEADER MODERNO
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.only(top: 56, bottom: 24),
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF045006), Color(0xFF3FAF47)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius:
+            BorderRadius.vertical(bottom: Radius.circular(36)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔍 Campo de pesquisa
-            TextField(
-              controller: _pesquisaController,
-              onChanged: (value) {
-                setState(() {
-                  filtro = value.toLowerCase();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: "Pesquisar conversa...",
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF045006)),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
+            const Text(
+              "Conversas",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            _buildPesquisa(),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // 💬 Lista de conversas
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _controller.obterConversasUsuario(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF045006)),
-                    );
-                  }
+  // 🔍 PESQUISA MODERNA
+  Widget _buildPesquisa() {
+    return TextField(
+      controller: _pesquisaController,
+      onChanged: (value) {
+        setState(() => filtro = value.toLowerCase());
+      },
+      decoration: InputDecoration(
+        hintText: "Pesquisar conversa...",
+        prefixIcon: const Icon(Icons.search, color: Color(0xFF045006)),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
 
-                  if (snapshot.hasError) {
-                    return const Center(
-                      child: Text(
-                        "Erro ao carregar conversas.",
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    );
-                  }
+  // 💬 LISTA DE CONVERSAS
+  Widget _buildListaConversas() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _controller.obterConversasUsuario(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFF045006),
+            ),
+          );
+        }
 
-                  final conversas = snapshot.data ?? [];
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text(
+              "Erro ao carregar conversas.",
+              style: TextStyle(color: Colors.red),
+            ),
+          );
+        }
 
-                  final conversasFiltradas = conversas.where((c) {
-                    final nome = (c['nome'] ?? '').toString().toLowerCase();
-                    return nome.contains(filtro);
-                  }).toList();
+        final conversasMap = snapshot.data ?? [];
 
-                  if (conversasFiltradas.isEmpty) {
-                    return Center(
-                      child: Text(
-                        "Nenhuma conversa encontrada.",
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      ),
-                    );
-                  }
+        final conversas = conversasMap
+            .map((c) => ChatModel.fromMap(c))
+            .toList();
 
-                  return ListView.builder(
-                    itemCount: conversasFiltradas.length,
-                    itemBuilder: (context, index) {
-                      final conversa = conversasFiltradas[index];
+        final conversasFiltradas = conversas.where((c) {
+          return c.nome.toLowerCase().contains(filtro);
+        }).toList();
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(40),
-                            child: _buildFotoPerfil(conversa['fotoPerfil']),
-                          ),
-                          title: Text(
-                            conversa['nome'] ?? "Usuário",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 17,
-                              color: Color(0xFF1C1C1C),
-                            ),
-                          ),
-                          subtitle: Text(
-                            conversa['ultimoTexto'] ?? "",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                          onTap: () {
-                                final uidOutroUsuario = conversa['uidOutroUsuario'];
-                                
-                                if (uidOutroUsuario != null && uidOutroUsuario.isNotEmpty) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => TelaChatPessoal(uidVendedor: uidOutroUsuario),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Erro ao abrir conversa.")),
-                                  );
-                                }
-                              },
-                        ),
-                      );
-                    },
-                  );
-                },
+        if (conversasFiltradas.isEmpty) {
+          return Center(
+            child: Text(
+              "Nenhuma conversa encontrada",
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          itemCount: conversasFiltradas.length,
+          itemBuilder: (_, index) {
+            final conversa = conversasFiltradas[index];
+            return _buildChatItem(conversa);
+          },
+        );
+      },
+    );
+  }
+
+  // 🧑‍💬 ITEM DE CHAT MODERNO
+  Widget _buildChatItem(ChatModel conversa) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        if (conversa.uidOutroUsuario.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TelaChatPessoal(
+                uidVendedor: conversa.uidOutroUsuario,
               ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Erro ao abrir conversa."),
+            ),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _buildAvatar(conversa.fotoPerfil),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    conversa.nome,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    conversa.ultimoTexto ?? "",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey,
             ),
           ],
         ),
@@ -161,34 +215,40 @@ class _TelaChatState extends State<TelaChat> {
     );
   }
 
-  Widget _buildFotoPerfil(dynamic imagemData) {
-    const double tamanho = 55;
+  // 👤 AVATAR
+  Widget _buildAvatar(String? imagemData) {
+    const double size = 54;
 
-    if (imagemData == null || imagemData.toString().isEmpty) {
-      return Container(
-        width: tamanho,
-        height: tamanho,
-        color: const Color(0xFF3FAF47),
-        child: const Icon(Icons.person, color: Colors.white, size: 32),
+    Widget imagem;
+
+    if (imagemData == null || imagemData.isEmpty) {
+      imagem = const Icon(Icons.person, color: Colors.white, size: 28);
+    } else if (imagemData.startsWith('http')) {
+      imagem = Image.network(
+        imagemData,
+        fit: BoxFit.cover,
       );
+    } else {
+      try {
+        imagem = Image.memory(
+          base64Decode(imagemData),
+          fit: BoxFit.cover,
+        );
+      } catch (_) {
+        imagem = const Icon(Icons.person_outline,
+            color: Colors.white, size: 28);
+      }
     }
 
-    if (imagemData.toString().startsWith('http')) {
-      return Image.network(imagemData,
-          width: tamanho, height: tamanho, fit: BoxFit.cover);
-    }
-
-    try {
-      final decodedBytes = base64Decode(imagemData);
-      return Image.memory(decodedBytes,
-          width: tamanho, height: tamanho, fit: BoxFit.cover);
-    } catch (e) {
-      return Container(
-        width: tamanho,
-        height: tamanho,
-        color: Colors.grey[300],
-        child: const Icon(Icons.person_outline, color: Colors.grey, size: 32),
-      );
-    }
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color(0xFF3FAF47),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imagem,
+    );
   }
 }

@@ -1,11 +1,15 @@
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:inteligencia_agro/Controller/Tela-perfil-controller/TelaPerfilController.dart';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
+
+import 'package:inteligencia_agro/Controller/Tela-perfil-controller/TelaPerfilController.dart';
+import 'package:inteligencia_agro/View/tela-configuracao/tela-configuracao.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-exibir-propostas/tela-exibir-propostas.dart';
 import 'package:inteligencia_agro/View/tela-perfil/tela-ver-meus-itens/tela-ver-meus-itens.dart';
+
 
 class TelaPerfil extends StatefulWidget {
   const TelaPerfil({Key? key}) : super(key: key);
@@ -16,14 +20,11 @@ class TelaPerfil extends StatefulWidget {
 
 class _TelaPerfilState extends State<TelaPerfil> {
   final TelaPerfilController _controller = TelaPerfilController();
-  final TextEditingController _descricaoController = TextEditingController();
 
   String nomeUsuario = "";
   String cidade = "";
   String estado = "";
   String? fotoPerfilBase64;
-
-  bool _mostrarBotaoSalvar = false;
 
   @override
   void initState() {
@@ -32,51 +33,38 @@ class _TelaPerfilState extends State<TelaPerfil> {
   }
 
   Future<void> _carregarUsuario() async {
-    var dados = await _controller.obterUsuario();
+    final dados = await _controller.obterUsuario();
     if (dados != null) {
       setState(() {
         nomeUsuario = dados['nome'] ?? '';
-        if (dados['endereco'] != null && (dados['endereco'] as List).isNotEmpty) {
+        if (dados['endereco'] != null &&
+            (dados['endereco'] as List).isNotEmpty) {
           cidade = dados['endereco'][0]['cidade'] ?? '';
           estado = dados['endereco'][0]['estado'] ?? '';
         }
-        _descricaoController.text = dados['descricao'] ?? '';
         fotoPerfilBase64 = dados['fotoPerfil'];
       });
     }
   }
 
-  void _salvarDescricao() async {
-    await _controller.atualizarDescricao(_descricaoController.text);
-    setState(() {
-      _mostrarBotaoSalvar = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Descrição salva com sucesso!'),
-        backgroundColor: Color(0xFF3FAF47),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   Future<void> _selecionarFoto() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? imagemSelecionada = await picker.pickImage(source: ImageSource.gallery);
+    final picker = ImagePicker();
+    final XFile? imagemSelecionada =
+        await picker.pickImage(source: ImageSource.gallery);
 
     if (imagemSelecionada != null) {
       Uint8List bytes = await imagemSelecionada.readAsBytes();
-
       img.Image? imagemDecode = img.decodeImage(bytes);
+
       if (imagemDecode != null) {
-        img.Image imagemRedimensionada = img.copyResize(imagemDecode, width: 300);
-        Uint8List bytesRedimensionados = Uint8List.fromList(
+        img.Image imagemRedimensionada =
+            img.copyResize(imagemDecode, width: 400);
+
+        Uint8List bytesFinal = Uint8List.fromList(
           img.encodeJpg(imagemRedimensionada, quality: 85),
         );
 
-        String base64Image = base64Encode(bytesRedimensionados);
-
+        final base64Image = base64Encode(bytesFinal);
         await _controller.atualizarFotoPerfil(base64Image);
 
         setState(() {
@@ -86,151 +74,179 @@ class _TelaPerfilState extends State<TelaPerfil> {
     }
   }
 
+  Route _slideRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (_, __, ___) => page,
+      transitionsBuilder: (_, animation, __, child) {
+        final tween = Tween(
+          begin: const Offset(1, 0),
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "Perfil",
-          style: TextStyle(color: Colors.white, fontSize: 22),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF045006),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-        automaticallyImplyLeading: false,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: Column(
+        children: [
+          /// HEADER MODERNO
+          Container(
+            height: 240,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF045006), Color(0xFF3FAF47)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(40),
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                GestureDetector(
-                  onTap: _selecionarFoto,
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: fotoPerfilBase64 != null
-                        ? MemoryImage(base64Decode(fotoPerfilBase64!))
-                        : null,
-                    child: fotoPerfilBase64 == null
-                        ? const Icon(Icons.person, size: 50, color: Colors.green)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
+                Positioned(
+                  top: 60,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      GestureDetector(
+                        onTap: _selecionarFoto,
+                        child: CircleAvatar(
+                          radius: 48,
+                          backgroundColor: Colors.white,
+                          child: CircleAvatar(
+                            radius: 44,
+                            backgroundImage: fotoPerfilBase64 != null
+                                ? MemoryImage(
+                                    base64Decode(fotoPerfilBase64!))
+                                : null,
+                            backgroundColor: Colors.grey[300],
+                            child: fotoPerfilBase64 == null
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Colors.green,
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       Text(
                         nomeUsuario,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF045006),
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "$cidade, $estado",
-                        style: const TextStyle(fontSize: 16, color: Colors.black54),
+                        "$cidade • $estado",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+          ),
 
-            TextFormField(
-              controller: _descricaoController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: "Descrição do perfil",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _mostrarBotaoSalvar = true;
-                });
-              },
-            ),
+          const SizedBox(height: 20),
 
-            if (_mostrarBotaoSalvar) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _salvarDescricao,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6CCF77),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text(
-                    "Salvar",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 24),
-
-            Column(
-              children: [
-                _botaoAcao("Ver meus itens", true, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TelaVerMeusItens(),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 12),
-                _botaoAcao("Ver propostas", false, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TelaExibirProposta(),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ],
-        ),
+          /// AÇÕES MODERNAS
+          _itemMenu(
+            icon: Icons.inventory_2_outlined,
+            titulo: "Meus Itens",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TelaVerMeusItens()),
+              );
+            },
+          ),
+          _itemMenu(
+            icon: Icons.handshake_outlined,
+            titulo: "Propostas",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TelaExibirProposta()),
+              );
+            },
+          ),
+          _itemMenu(
+            icon: Icons.settings_outlined,
+            titulo: "Configurações",
+            onTap: () {
+              Navigator.of(context)
+                  .push(_slideRoute(const TelaConfiguracoes()));
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _botaoAcao(String texto, bool isBranco, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 50),
-        backgroundColor: isBranco ? Colors.white : const Color(0xFF3FAF47),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: isBranco ? const BorderSide(color: Color(0xFF045006), width: 1.5) : null,
-      ),
-      child: Text(
-        texto,
-        style: TextStyle(
-          fontSize: 16,
-          color: isBranco ? const Color(0xFF045006) : Colors.white,
-          fontWeight: FontWeight.bold,
+  Widget _itemMenu({
+    required IconData icon,
+    required String titulo,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3FAF47).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: const Color(0xFF045006)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  titulo,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );

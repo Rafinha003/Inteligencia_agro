@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:inteligencia_agro/Controller/tela-chat/chatController.dart';
+import 'package:inteligencia_agro/Controller/tela-chat/tela-chat-pessoal-controller.dart';
+import 'package:inteligencia_agro/common/notificacao_tela.dart';
 
 class TelaChatPessoal extends StatefulWidget {
   final String uidVendedor;
@@ -14,7 +15,7 @@ class TelaChatPessoal extends StatefulWidget {
 }
 
 class _TelaChatPessoalState extends State<TelaChatPessoal> {
-  final ChatController _controller = ChatController();
+  final ChatPessoalController _controller = ChatPessoalController();
   final TextEditingController _mensagemController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -90,10 +91,7 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
           ),
           title: Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundImage: fotoWidget,
-              ),
+            fotoWidget,
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -204,17 +202,34 @@ class _TelaChatPessoalState extends State<TelaChatPessoal> {
     );
   }
 
-  ImageProvider _buildFotoPerfil(String? base64Data) {
-    try {
-      if (base64Data != null && base64Data.isNotEmpty) {
-        final decoded = base64Decode(base64Data);
-        return MemoryImage(decoded);
-      }
-    } catch (e) {
-      debugPrint("Erro ao decodificar imagem de perfil: $e");
+  Widget _buildFotoPerfil(String? base64Data) {
+  try {
+    if (base64Data != null && base64Data.isNotEmpty) {
+      final decoded = base64Decode(base64Data);
+      return CircleAvatar(
+        radius: 22,
+        backgroundImage: MemoryImage(decoded),
+      );
     }
-    return const AssetImage('assets/images/user_placeholder.png');
+  } catch (e) {
+    mostrarNotificacaoTela(
+      context: context,
+      texto: e.toString(),
+    );
   }
+
+  // 🔹 Ícone padrão do Flutter
+  return const CircleAvatar(
+    radius: 22,
+    backgroundColor: Colors.white,
+    child: Icon(
+      Icons.person,
+      size: 26,
+      color: Color(0xFF045006),
+    ),
+  );
+}
+
 
   Widget _buildCampoMensagem() {
     return SafeArea(
